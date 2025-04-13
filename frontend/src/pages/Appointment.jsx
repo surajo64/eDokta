@@ -5,6 +5,7 @@ import { assets } from '../assets/assets';
 import RelatedDoctors from '../components/relatedDoctors';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useLoading } from '../context/loadingContext';
 
 const Appointment = () => {
   const { docId } = useParams();
@@ -16,6 +17,8 @@ const Appointment = () => {
   const [docSlots, setDocSlots] = useState([]);
   const [slotIndex, setSlotIndex] = useState(0);
   const [slotTime, setSlotTime] = useState('');
+  const [type, setType] = useState("");
+  const { setLoading } = useLoading();
 
   const fetchDocInfo = async () => {
     const docInfo = doctors.find(doc => doc._id === docId);
@@ -77,16 +80,16 @@ const Appointment = () => {
       toast.warn("Please Login to Book an Appointment!")
       return navigate('/login')
     }
-
+    setLoading(true);
     try {
       const date = docSlots[slotIndex][0].datetime
       let day = date.getDate()
       let month = date.getMonth() + 1;
       let year = date.getFullYear()
 
-      const slotDate =  day + "-" + month + "-" + year
+      const slotDate = day + "-" + month + "-" + year
 
-      const { data } = await axios.post(backendUrl + '/api/user/book-appointment', { docId, slotDate, slotTime }, { headers: { token } })
+      const { data } = await axios.post(backendUrl + '/api/user/book-appointment', { docId, slotDate, slotTime, type }, { headers: { token } })
       console.log(data)
 
       if (data.success) {
@@ -100,6 +103,8 @@ const Appointment = () => {
     } catch (error) {
       console.log(error)
       toast.error(error.message)
+    }finally {
+      setLoading(false);
     }
 
   }
@@ -174,6 +179,15 @@ const Appointment = () => {
             ))
 
           }
+
+        </div>
+
+        <div>
+          <select onChange={(e) => setType(e.target.value)} value={type} className="px-5 py-3 mt-6 text-smborder border border-blue-200 rounded" required>
+            <option value="">Select Type of Appointment</option>
+            <option value="telemedicine">Telemedicine Booking</option>
+            <option value="facility">Facility Booking</option>
+          </select>
         </div>
         <button onClick={bookAppointment} className='bg-primary text-white px-5 py-3 rounded-full font-light mt-6 text-sm '>Book an Appointment</button>
 
@@ -182,7 +196,7 @@ const Appointment = () => {
 
       <RelatedDoctors docId={docId} speciality={docInfo.speciality} />
 
-    </div>
+    </div >
 
   );
 };

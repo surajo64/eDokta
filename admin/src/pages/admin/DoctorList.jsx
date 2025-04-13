@@ -14,6 +14,12 @@ const DoctorList = () => {
   const [monthlyEarnings, setMonthlyEarnings] = useState(0);
   const [monthlyCompletedAppointments, setMonthlyCompletedAppointments] = useState(0);
   const { setLoading } = useLoading();
+  const states = [
+    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
+    "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", 
+    "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", 
+    "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe"
+  ];
 
   // Fetch doctor statistics (earnings & completed appointments)
   const fetchDoctorStats = async (docId) => {
@@ -38,7 +44,7 @@ const DoctorList = () => {
   const handleSelectDoctor = (doctor) => {
     setLoading(true);
     const timer = setTimeout(() => setLoading(false), 300);
-    
+
     setSelectedDoctor(doctor);
     fetchDoctorStats(doctor._id);
     return () => clearTimeout(timer);
@@ -56,7 +62,10 @@ const DoctorList = () => {
       docId: selectedDoctor._id,
       name: selectedDoctor.name,
       address: selectedDoctor.address,
-      fees: selectedDoctor.fees
+      phone: selectedDoctor.phone,
+      degree: selectedDoctor.degree,
+      state: selectedDoctor.state,
+      experience: selectedDoctor.experience
     };
 
     try {
@@ -73,7 +82,7 @@ const DoctorList = () => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-    }finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -89,10 +98,10 @@ const DoctorList = () => {
   useEffect(() => {
     if (!searchTerm) {
       setFilteredDoctors(doctors);
-      return ;
-      
+      return;
+
     }
-  
+
     setFilteredDoctors(
       (doctors || []).filter(doctor =>
         doctor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,7 +109,7 @@ const DoctorList = () => {
         doctor.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         doctor.address?.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      
+
     );
     setLoading(true);
     const timer = setTimeout(() => setLoading(false), 400);
@@ -161,78 +170,127 @@ const DoctorList = () => {
             </button>
 
             <h2 className="text-2xl font-semibold text-center text-gray-800 mb-3">
-            {selectedDoctor.name}'s Details
+              {selectedDoctor.name}'s Details
             </h2>
 
             {/* Doctor Stats (Compact Grid) */}
             <div className="grid grid-cols-2 gap-3 mb-4">
 
               {/* Total Earnings */}
-              <div className="flex items-center bg-white p-3 rounded-xl shadow-md border border-gray-200">
-                <img className="w-10 h-10 mr-2" src={assets.earning_icon} alt="Earnings" />
+              <div className="flex items-center bg-white p-2 rounded-xl shadow-md border border-blue-300">
+                <img className="w-8 h-8 mr-2" src={assets.earning_icon} alt="Earnings" />
                 <div>
-                  <p className="text-lg font-bold text-gray-800">{currencySymbol}{totalEarnings}</p>
-                  <p className="text-gray-500 text-sm">Total Earnings</p>
+                  <p className="text-md font-bold text-blue-600">{currencySymbol}{totalEarnings}</p>
+                  <p className="text-gray-500 text-xs">Total Earnings</p>
                 </div>
               </div>
 
               {/* Completed Appointments */}
-              <div className="flex items-center bg-white p-3 rounded-xl shadow-md border border-gray-200">
-                <img className="w-10 h-10 mr-2" src={assets.appointment_icon} alt="Appointments" />
+              <div className="flex items-center bg-white p-2 rounded-xl shadow-md border border-blue-300">
+                <img className="w-8 h-8 mr-2" src={assets.appointment_icon} alt="Appointments" />
                 <div>
-                  <p className="text-lg font-bold text-gray-800">{completedAppointments}</p>
-                  <p className="text-gray-500 text-sm">Total Completed</p>
+                  <p className="text-md font-bold text-blue-600">{completedAppointments}</p>
+                  <p className="text-gray-500 text-xs">Total Completed</p>
                 </div>
               </div>
 
               {/* Monthly Earnings */}
-              <div className="flex items-center bg-white p-3 rounded-xl shadow-md border border-gray-200">
-                <img className="w-10 h-10 mr-2" src={assets.earning_icon} alt="Monthly Earnings" />
+              <div className="flex items-center bg-white p-2 rounded-xl shadow-md border border-blue-300">
+                <img className="w-8 h-8 mr-2" src={assets.earning_icon} alt="Monthly Earnings" />
                 <div>
-                  <p className="text-lg font-bold text-gray-800">{currencySymbol}{monthlyEarnings}</p>
-                  <p className="text-gray-500 text-sm">Current Month Earnings</p>
+                  <p className="text-md font-bold text-blue-600">{currencySymbol}{monthlyEarnings}</p>
+                  <p className="text-gray-500 text-xs">Current Month Earnings</p>
                 </div>
               </div>
 
               {/* Monthly Completed Appointments */}
-              <div className="flex items-center bg-white p-3 rounded-xl shadow-md border border-gray-200">
-                <img className="w-10 h-10 mr-2" src={assets.appointment_icon} alt="Monthly Completed" />
+              <div className="flex items-center bg-white p-2 rounded-xl shadow-md border border-blue-300">
+                <img className="w-8 h-8 mr-2" src={assets.appointment_icon} alt="Monthly Completed" />
                 <div>
-                  <p className="text-lg font-bold text-gray-800">{monthlyCompletedAppointments}</p>
-                  <p className="text-gray-500 text-sm">Current Month Completed</p>
+                  <p className="text-md font-bold text-blue-600">{monthlyCompletedAppointments}</p>
+                  <p className="text-gray-500 text-xs">Current Month Completed</p>
                 </div>
               </div>
+
 
             </div>
 
             {/* Editable Fields */}
-            <div className="space-y-2">
-              <label className="text-gray-700 font-medium text-sm">Full Name</label>
-              <input
-                name="name"
-                onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
-                type="text"
-                value={selectedDoctor.name}
-                className="w-full p-2 border rounded-md text-gray-600 text-sm"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-gray-700 font-medium text-sm">Full Name</label>
+                <input
+                  name="name"
+                  onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                  type="text"
+                  value={selectedDoctor.name}
+                  className="w-full p-2 border rounded-md text-gray-600 text-sm"
+                />
+              </div>
 
-              <label className="text-gray-700 font-medium text-sm">Address</label>
-              <input
-                name="address"
-                onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
-                type="text"
-                value={selectedDoctor.address || ''}
-                className="w-full p-2 border rounded-md text-gray-600 text-sm"
-              />
+              <div>
+                <label className="text-gray-700 font-medium text-sm">Qualification</label>
+                <input
+                  name="degree"
+                  onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                  type="text"
+                  value={selectedDoctor.degree}
+                  className="w-full p-2 border rounded-md text-gray-600 text-sm"
+                />
+              </div>
 
-              <label className="text-gray-700 font-medium text-sm">Fees</label>
-              <input
-                name="fees"
+              <div>
+                <label className="text-gray-700 font-medium text-sm">Experience</label>
+                <select
+                  onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                  value={selectedDoctor.experience || ''}
+                  name="experience"
+                  className="w-full p-2 border border-blue-200 rounded"
+                  required>
+                    
+                  <option value="1-5 Years">1-5 Years</option>
+                  <option value="6-10 Years">6-10 Years</option>
+                  <option value="11-15 Years">11-15 Years</option>
+                  <option value="16-20 Years">16-20 Years</option>
+                  <option value="More than 20 Years">More than 20 Years</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-gray-700 font-medium text-sm">State</label>
+                <select
                 onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
-                type="text"
-                value={selectedDoctor.fees || ''}
-                className="w-full p-2 border rounded-md text-gray-600 text-sm"
-              />
+                  name="state"
+                value={selectedDoctor.state || ''}
+                className="w-full p-2 border border-blue-200 rounded"
+                required>
+                {states.map((docstate, index) => (
+                  <option key={index} value={docstate}>{docstate}</option>
+                ))}
+              </select>
+              </div>
+
+              <div>
+                <label className="text-gray-700 font-medium text-sm">Location</label>
+                <input
+                  name="address"
+                  onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                  type="text"
+                  value={selectedDoctor.address || ''}
+                  className="w-full p-2 border rounded-md text-gray-600 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-700 font-medium text-sm">Phone</label>
+                <input
+                  name="phone"
+                  onChange={(e) => setSelectedDoctor(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                  type="text"
+                  value={selectedDoctor.phone || ''}
+                  className="w-full p-2 border rounded-md text-gray-600 text-sm"
+                />
+              </div>
             </div>
 
             {/* Buttons */}
@@ -250,6 +308,7 @@ const DoctorList = () => {
                 Close
               </button>
             </div>
+
           </div>
         </div>
       )}

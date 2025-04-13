@@ -17,6 +17,8 @@ const AddDoctor = () => {
   const [degree, setDegree] = useState("");
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
+  const [gender, setGender] = useState("");
+  const [phone, setPhone] = useState("");
   const [doctorFee, setDoctorFee] = useState("");
   const [specialityList, setSpecialityList] = useState([]); 
   const states = [
@@ -87,6 +89,8 @@ const AddDoctor = () => {
       formData.append("degree", degree);
       formData.append("address", address);
       formData.append("state", state);
+      formData.append("gender", gender);
+      formData.append("phone", phone);
 
       // API Request
       const { data } = await axios.post(`${backendUrl}/api/admin/add-doctor`, formData, {
@@ -106,6 +110,8 @@ const AddDoctor = () => {
         setSpeciality("");
         setDegree("");
         setAddress("");
+        setGender("")
+        setPhone("")
       } else {
         toast.error(data.message);
       }
@@ -167,7 +173,13 @@ const AddDoctor = () => {
 
 
               <input onChange={(e) => setDegree(e.target.value)} value={degree} type="text" placeholder="Qualification" className="w-full p-2 border border-blue-200 rounded" required />
+
+              <input onChange={(e) => setPhone(e.target.value)} value={phone} type="text" placeholder="Phone Number" className="w-full p-2 border border-blue-200 rounded" required />
+
             </div>
+
+            
+
 
             {/* Right Column */}
             <div className="w-full lg:flex-1 flex flex-col gap-4">
@@ -179,6 +191,13 @@ const AddDoctor = () => {
                 <option value="11-15 Years">11-15 Years</option>
                 <option value="16-20 Years">16-20 Years</option>
                 <option value="More than 20 Years">More than 20 Years</option>
+              </select>
+
+              <select onChange={(e) => setGender(e.target.value)} value={gender} className="w-full p-2 border border-blue-200 rounded" required>
+                <option value="">---Select Gender---</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Not Specified">Not Specified</option>
               </select>
 
               {/* Fee Fields (Read-only) */}

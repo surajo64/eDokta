@@ -91,7 +91,7 @@ const cancelAppointment = async (appointmentId) => {
       allDoctorsAppointments()
 
     } else {
-      toast.error(data.message)
+      toast.error(data.message) 
     }
 
   } catch (error) {

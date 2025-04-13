@@ -14,6 +14,7 @@ const appointmentSchema = new mongoose.Schema({
   cancelled: { type: Boolean, default: false  },
   payment: { type: Boolean,  default: false   },
   approve: { type: Boolean,  default: false   },
+  type: { type: String, required: true },
   isCompleted: { type: Boolean, default: false  },
   clinicalNote: { type: String, default: "" },
   diagnosis: { type: String, default: "" },

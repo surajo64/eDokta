@@ -21,7 +21,7 @@ const navigate = useNavigate();
 
   const getAppointments = async () => {
 
-    try {
+  /*  try {*/
 
       const { data } = await axios.get(backendUrl + '/api/doctor/appointments', { headers: { dToken } })
       if (data.success) {
@@ -31,9 +31,9 @@ const navigate = useNavigate();
         toast.error(data.message)
       }
 
-    } catch (error) {
+  /*  } catch (error) {
       toast.error(error.message)
-    }
+    }*/
   }
 
 

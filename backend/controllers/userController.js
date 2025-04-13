@@ -17,7 +17,7 @@ import nodemailer from 'nodemailer';
 const nigerianPhoneRegex = /^(?:\+234|0)(70|80|81|90|91)\d{8}$/;
 // API to Register User/Patient
 
-const registerUser = async (req, res) => { 
+const registerUser = async (req, res) => {
   try {
     const { name, email, phone, nin, password, isAccepted } = req.body;
 
@@ -48,12 +48,12 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Phone number already in use" });
     }
 
-    const newUser = new userModel({ 
-      name, 
-      email, 
-      phone, 
-      nin, 
-      password: hashedPassword, 
+    const newUser = new userModel({
+      name,
+      email,
+      phone,
+      nin,
+      password: hashedPassword,
       isAccepted  // Store in the database
     });
 
@@ -114,14 +114,14 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { userId, name, phone, email, gender, address, dob,nin } = req.body
+    const { userId, name, phone, email, gender, address, dob, nin } = req.body
     const imageFile = req.file
 
     if (!name || !email || !phone || !nin || !gender || !address || !dob) {
       res.json({ success: false, message: 'Data is Missing' })
     }
 
-    await userModel.findByIdAndUpdate(userId, { name, phone,nin, email, address, gender, dob })
+    await userModel.findByIdAndUpdate(userId, { name, phone, nin, email, address, gender, dob })
 
     if (imageFile) {
       //upload image to cloudinary
@@ -140,33 +140,34 @@ const updateProfile = async (req, res) => {
 //API to Book Appointment
 
 const bookAppointment = async (req, res) => {
-
   try {
-
-    const { userId, docId, slotDate, slotTime } = req.body
-    const docData = await doctorModel.findById(docId).select('-password')
-
+    const { userId, docId, slotDate, slotTime, type } = req.body;
+    const docData = await doctorModel.findById(docId).select('-password');
 
     if (!docData.available) {
-      return res.json({ success: false, message: "Doctor not Available" })
-
+      return res.json({ success: false, message: "Doctor not Available" });
     }
 
-    let slots_booked = docData.slots_booked
-    // checking for slot availability
+    if (!type) {
+      return res.json({ success: false, message: "Please Select type Booking!" });
+    }
 
+    let slots_booked = docData.slots_booked;
+
+    // Checking for slot availability
     if (slots_booked[slotDate]) {
       if (slots_booked[slotDate].includes(slotTime)) {
-        return res.json({ success: false, message: "Slot not Available" })
+        return res.json({ success: false, message: "Slot not Available" });
       } else {
-        slots_booked[slotDate].push(slotTime)
+        slots_booked[slotDate].push(slotTime);
       }
     } else {
       slots_booked[slotDate] = [];
-      slots_booked[slotDate].push(slotTime)
+      slots_booked[slotDate].push(slotTime);
     }
-    const userData = await userModel.findById(userId).select('-password')
-    delete docData.slots_booked
+
+    const userData = await userModel.findById(userId).select('-password');
+    delete docData.slots_booked;
 
     const appointmentData = {
       userId,
@@ -176,22 +177,85 @@ const bookAppointment = async (req, res) => {
       amount: docData.fees,
       slotTime,
       slotDate,
-      date: Date.now()
-    }
-    const newAppointment = new appointmentModel(appointmentData)
-    await newAppointment.save()
+      type,
+      date: Date.now(),
+    };
 
-    // save new slots data in docdate
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked })
-    res.json({ success: true, message: "Appointment Booked!" })
+    const newAppointment = new appointmentModel(appointmentData);
+    await newAppointment.save();
 
+    // Save new slots data in docdata
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+    // Sending Email Notification to Doctor and Patient
+    const sendEmailNotification = async () => {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail', // You can replace this with another email service
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      // Email content
+      const subject = `Appointment Booking Notification - ${slotDate} ${slotTime}`;
+      const patientMessage = `
+        <h2>Your Appointment is Successfully Booked</h2>
+        <p>Dear ${userData.name},</p>
+        <p>Your appointment with Dr. ${docData.name} has been successfully booked for ${slotDate} at ${slotTime}.</p>
+        <p>Type of Appointment: ${type}</p>
+        <p>Amount: ₦ ${docData.fees}</p>
+        <p>Thank you for using our services!</p>
+      `;
+
+      const doctorMessage = `
+        <h2>New Appointment Booking</h2>
+        <p>Dear ${docData.name},</p>
+        <p>You have a new appointment booked with ${userData.name} for ${slotDate} at ${slotTime}.</p>
+        <p>Type of Appointment: ${type}</p>
+        <p>Patient Contact: ${userData.phone}</p>
+        <p>Amount: ₦ ${docData.doctorFee}</p>
+        <p>Please login to your Account to Approve the Appointment!</p>
+        <p>Please make sure to prepare for the appointment!</p>
+      `;
+
+      // Patient email
+      const patientMailOptions = {
+        from: 'info@edocta.com',
+        to: userData.email,
+        subject: subject,
+        html: patientMessage,
+      };
+
+      // Doctor email
+      const doctorMailOptions = {
+        from: 'info@edocta.com',
+        to: docData.email, // Ensure the doctor's email is stored in the docData
+        subject: subject,
+        html: doctorMessage,
+      };
+
+      try {
+        // Send both emails
+        await transporter.sendMail(patientMailOptions);
+        await transporter.sendMail(doctorMailOptions);
+        console.log('Emails sent successfully');
+      } catch (error) {
+        console.error('Error sending email:', error);
+      }
+    };
+
+    // Call the email sending function
+    await sendEmailNotification();
+
+    res.json({ success: true, message: "Appointment Booked!" });
 
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
+};
 
-}
 // API to get user Appointment
 
 const listAppointment = async (req, res) => {
@@ -411,4 +475,4 @@ const getAppointmentById = async (req, res) => {
   }
 };
 
-export { registerUser, userLogin, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppoint, paystackPayment, paystackVerifyPayment, forgotPassword, resetPassword, getAppointmentById,}
+export { registerUser, userLogin, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppoint, paystackPayment, paystackVerifyPayment, forgotPassword, resetPassword, getAppointmentById, }

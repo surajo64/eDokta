@@ -62,40 +62,19 @@ const doctoLogin = async (req,res) => {
 
 
 
-const doctorAppointment = async (req, res) => {
-  try {
-    const { startDate, endDate, filterType, docId } = req.query;
-    let query = {};
+const doctorAppointment = async (req,res) => {
 
-    if (docId) {
-      query.docId = docId;  // 🔥 this line filters for only the current doctor
-    }
+   try {
+      const { docId } = req.body
+      const appointments = await appointmentModel.find({docId})
+      res.json({success:true, appointments})
 
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      query.date = { $gte: start, $lte: end };
-    }
-
-    if (filterType === "completed") {
-      query.isCompleted = true;
-    } else if (filterType === "uncompleted") {
-      query.isCompleted = false;
-    }
-
-    console.log("Query:", JSON.stringify(query, null, 2)); 
-
-    const appointments = await appointmentModel.find(query);
-
-    console.log("Filtered Appointments:", appointments); 
-
-    res.json({ success: true, appointments });
-  } catch (error) {
-    console.error("Error fetching appointments:", error);
-    res.json({ success: false, message: error.message });
-  }
-};
+   } catch (error) {
+      console.log(error);
+      res.json({ success: false, message: error.message });
+   }
+   
+}
 
 
 
@@ -193,7 +172,12 @@ const doctorDashboard = async (req,res) => {
      })
      let completed = appointments.filter(item => item.isCompleted).length;
      let cancel = appointments.filter(item => item.cancelled).length;
-     let pending = appointments.filter(item => item.cancelled).length;
+
+     let pending = appointments.filter(item =>
+      !item.isCompleted &&
+      (item.approved || item.payment || !item.cancelled)
+    ).length;
+    
 
      const dashboardData = {
       earning,

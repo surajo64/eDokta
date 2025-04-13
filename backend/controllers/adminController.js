@@ -19,11 +19,11 @@ const AddDoctor = async (req, res) => {
 
    try {
 
-  const { name, email, password, speciality, degree, experience, about, fees, address,state,doctorFee } = req.body
+  const { name, email, password, speciality, degree, experience, about, fees, address,state,doctorFee,gender,phone } = req.body
   const imageFile = req.file
 
   // Validate required fields
-  if (!name || !email || !password || !speciality || !degree || !experience || !about || !address || !fees || !state || !doctorFee) {
+  if (!name || !email || !password || !speciality || !degree || !experience || !about || !address || !fees || !state || !doctorFee || !gender || !phone) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
@@ -63,6 +63,8 @@ const AddDoctor = async (req, res) => {
     doctorFee,
     state,
     address,
+    gender,
+    phone,
     image: imageUrl,
     date: Date.now()
   };
@@ -132,7 +134,7 @@ const allDoctors = async (req, res) => {
   }
 
 }
-
+ 
 // admin appointment
 const adminAppointment = async (req, res) => {
   try {
@@ -486,17 +488,16 @@ const getDoctorById = async (req,res) => {
 
 
 const updateProfile = async (req, res) => {
-  console.log("🛠 Received data in backend:", req.body); 
 
-  const { docId, name, address, fees } = req.body;
+
+  const { docId, name, address, phone,degree,experience, state } = req.body;
 
   if (!docId) {
-    console.error("Error: Doctor ID is missing in request");
     return res.status(400).json({ success: false, message: "Doctor ID is required!" });
   }
 
   try {
-    const updatedDoctor = await doctorModel.findByIdAndUpdate(docId, { name, address, fees }, { new: true });
+    const updatedDoctor = await doctorModel.findByIdAndUpdate(docId, { name, address, phone,degree,experience, state }, { new: true });
 
     if (!updatedDoctor) {
       return res.status(404).json({ success: false, message: "Doctor not found!" });
@@ -531,10 +532,10 @@ const fetchDoctor = async (req, res) => {
     });
 
     // Calculate total earnings (20% of the total paid amount)
-    const totalEarnings = allCompletedAppointments.reduce((sum, appt) => sum + (appt.amount * 0.2), 0);
+    const totalEarnings = allCompletedAppointments.reduce((sum, appt) => sum + (appt.docData.doctorFee), 0);
 
     // Calculate monthly earnings (20% of this month's earnings)
-    const monthlyEarnings = monthlyCompletedAppointments.reduce((sum, appt) => sum + (appt.amount * 0.2), 0);
+    const monthlyEarnings = monthlyCompletedAppointments.reduce((sum, appt) => sum + (appt.docData.doctorFee), 0);
 
     res.json({
       success: true,
