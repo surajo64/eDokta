@@ -63,7 +63,7 @@ const navigate = useNavigate()
       prescription,
       investigation
     };
-    setLoading(true);
+    setLoading(true); 
     try {
       const { data } = await axios.post(`${backendUrl}/api/doctor/clinical-note`, formData, {
         headers: { dToken },
@@ -290,7 +290,7 @@ const navigate = useNavigate()
                 item.type === "telemedicine" ? (
 
                    <button
-                    onClick={() => navigate(`/telehealth/${item._id}`)}
+                    onClick={() => navigate(`/telehealthRoom/${item._id}`)}
                     className="text-sm text-white bg-blue-500 px-4 py-2 rounded hover:bg-blue-600 transition"
                   >
                     Start Meeting

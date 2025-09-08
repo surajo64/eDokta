@@ -24,4 +24,4 @@ doctorRouter.get('/appointment/:appointmentId', authDoctor, getAppointmentById);
 
 
 
-export default doctorRouter;
+export default doctorRouter; 

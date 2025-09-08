@@ -35,7 +35,7 @@ import AddSpeciality from './pages/admin/addSpeciality.jsx'
 import TelehealthRoom from './pages/doctor/telehealth.jsx'
 
 const App = () => {
-  const { aToken } = useContext(AdminContext);
+  const { aToken } = useContext(AdminContext); 
   const { dToken } = useContext(DoctorContext);
   const location = useLocation();
 
@@ -73,7 +73,7 @@ const App = () => {
               <Route path='/doctor-appointment' element={<MyAppointment />} />
               <Route path='/doctor-profile' element={<DoctorProfile />} />
               <Route path='/change-password' element={<ChangePassword />} />
-              <Route path='/telehealth/:appointmentId' element={<TelehealthRoom/>} />
+              <Route path='/telehealthRoom/:appointmentId' element={<TelehealthRoom/>} />
 
               {/* Redirect unknown paths */}
               <Route path="*" element={<Navigate to={aToken ? '/admin-dashboard' : '/doctor-dashboard'} />} />

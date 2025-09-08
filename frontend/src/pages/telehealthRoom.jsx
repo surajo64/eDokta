@@ -64,8 +64,8 @@ const TelehealthRoom = () => {
       />
 
       {/* Bottom-right overlay to cover Jitsi watermark */}
-      <div className="absolute bottom-3 right-3 bg-black/70 px-2 py-1 rounded z-50 flex items-center">
-        <img src={logo} alt="eDokta" className="w-20" />
+      <div className="absolute bottom-3 text-white right-3 bg-black/70 px-2 py-1 rounded z-50 flex items-center">
+        <p>Powered by eDokta...</p>
       </div>
     </div>
   );
