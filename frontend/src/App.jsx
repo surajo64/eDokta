@@ -17,6 +17,8 @@ import Test from './pages/test'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useLoading } from "./context/loadingContext";
+import RuralHealth from './pages/ruralHealth'
+import Insurance from './pages/insurance'
 
 const App = () => {
   const { setLoading } = useLoading(); 
@@ -36,6 +38,8 @@ const App = () => {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
+        <Route path='/ruralhealth' element={<RuralHealth />} />
+         <Route path='/insurance' element={<Insurance />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/doctors' element={<Doctors />} />
         <Route path='/doctors/:speciality' element={<Doctors />} />

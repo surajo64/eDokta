@@ -11,13 +11,17 @@ const About = () => {
       <div className='my-10 flex flex-col md:flex-row gap-12 '>
         <img className='w-full md:max-w-[360px]' src={assets.about_image} alt="" />
         <div className=' border border-blue-200 px-12 py-6 flex flex-col justify-center gap-6 md:w-2/3 text-sm text-gray-600 '>
-          <p>KIRCT Kilimanjaro Hospital is a private hospital located at the Kano Independent Research Centre Trust (KIRCT) in Kano, Nigeria. We provide quality and unique medical and surgical services and training to our clients in an ambient and friendly environment. The hospital has combined local and expatriate medical experts working harmoniously to provide excellent world-class services with a local touch. The target clients include those from Kano, Nigeria and neighboring West African countries with a strong desire to reduce and reverse medical tourism in the long run.</p>
+          <p>eDokta is a private digital Health organization that democratizes access to standard healthcare through the use of digital technology across socio-economic devide in Nigeria and other west African Countries. We provide quality and unique medical services at the comfort of your home, or your digital screen. Our portfolio cuts across digital Clinic (Teleconsultation, Home healthcare,
+            Wellness Clinic & Medical Checkup,
+            Medical tourism and booking,
+            Travel Health), e-Pharmacy, Rural Digital Health, Takaful (Risk sharing) Health Insurance, Education and Training, and Digital Health Research. 
+            </p>
 
           <b className='text-gray-800'>Vision</b>
-          <p>To be among the top providers of advanced medical and surgical services and training in Nigeria and Sub-Saharan Africa</p>
+          <p>To be among the top providers of basic and advanced digital Healthcare in Nigeria and West Africa</p>
 
           <b className='text-gray-800'>Mission</b>
-          <p>To provide advanced medical and surgical services and training with incorporation of technology in a customer-friendly environment</p>
+          <p>To provide quality healthcare using digital technology in a customer-friendly environment.</p>
 
         </div>
       </div>
@@ -42,7 +46,7 @@ const About = () => {
           </p>
         </div>
 
-        <div  className='border px-10 md:px-16 py-8 sm:py-16 flex flex-col gap-5 text-[15px] hover:bg-primary hover:text-white transition-all duration-300 text-gray-600 cursor-pointer'>
+        <div className='border px-10 md:px-16 py-8 sm:py-16 flex flex-col gap-5 text-[15px] hover:bg-primary hover:text-white transition-all duration-300 text-gray-600 cursor-pointer'>
           <b>PERSONALIZATION:</b>
           <p>
             Tailored recommendations and reminders to help you stay on top of your health.
