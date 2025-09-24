@@ -32,7 +32,7 @@ const App = () => {
   }, [location]);
 
   return (
-    <div className='mx-4 sm:mx-[10%]'>
+    <div className='mx-4 sm:mx-[5%]'>
       <ToastContainer />
       <Navbar />
       <Routes>
