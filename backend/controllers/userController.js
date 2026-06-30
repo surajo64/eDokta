@@ -9,6 +9,16 @@ import cors from 'cors'
 import 'dotenv/config'
 import axios from 'axios'
 import nodemailer from 'nodemailer';
+import Course from '../models/courseModel.js';
+import CourseProgress from '../models/courseProgressModel.js';
+import Purchase from '../models/purchaseModel.js';
+import Quiz, { questionSchema } from "../models/quizMode.js";
+import crypto from "crypto";
+import streamifier from "streamifier";
+import { v4 as uuidv4 } from "uuid";
+import PDFDocument from "pdfkit";
+import { buildCertificateContent, uploadCertificateToCloudinary } from "../utils/certificateHelper.js";
+import { sendEnrollmentConfirmationEmail, sendEnrollmentNotificationEmail, sendEmail, sendVerificationEmail } from '../config/emailUtils.js';
 
 
 
@@ -487,4 +497,554 @@ const getAppointmentById = async (req, res) => {
   }
 };
 
-export { registerUser, userLogin, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppoint, paystackPayment, paystackVerifyPayment, forgotPassword, resetPassword, getAppointmentById, }
+const getAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ isPublished: true }).select("-courseContent").populate("educator", "name email");
+    res.json({ success: true, courses });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const getCourseById = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const courseData = await Course.findById(courseId).populate("educator", "name email");
+    if (!courseData) {
+      return res.json({ success: false, message: "Course not found" });
+    }
+    res.json({ success: true, courseData });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// user enrolled Courses with lecture link
+const userEnrolledCourses = async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const userData = await userModel.findById(userId)
+      .populate({
+        path: 'enrolledCourses',
+        select: 'courseTitle courseThumbnail courseContent courseRatings educator enrolledStudents createdAt updatedAt courseAddress meetingUrl classSchedule courseMode',
+      });
+
+    // Fetch purchases to get attendanceType
+    const purchases = await Purchase.find({ userId, status: 'Completed' });
+
+    // Merge attendanceType into enrolledCourses
+    const enrolledCoursesWithDetails = userData.enrolledCourses.map(course => {
+      const purchase = purchases.find(p => p.courseId.toString() === course._id.toString());
+      return {
+        ...course.toObject(),
+        attendanceType: purchase ? purchase.attendanceType : (course.courseMode === 'Virtual' ? 'Virtual' : 'Physical')
+      };
+    });
+
+    res.json({ success: true, enrolledCourses: enrolledCoursesWithDetails });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// API to Purchase Course
+const purchaseCourse = async (req, res) => {
+  try {
+    const { courseId, attendanceType } = req.body;
+    const userId = req.body.userId;
+
+    const user = await userModel.findById(userId);
+    const course = await Course.findById(courseId);
+
+    if (!user || !course) {
+      return res.json({ success: false, message: "User or Course not found" });
+    }
+
+    if (!course.isActive) {
+      return res.json({ success: false, message: "Course registration is completed. New enrollments are not allowed." });
+    }
+
+    let price = 0;
+    if (attendanceType === 'Physical') {
+      price = course.purchasePricePhysical > 0 ? course.purchasePricePhysical : course.purchasePrice;
+    } else if (attendanceType === 'Virtual') {
+      price = course.purchasePriceVirtual > 0 ? course.purchasePriceVirtual : course.purchasePrice;
+    } else {
+      price = course.purchasePrice;
+    }
+
+    const amount = price * 100;
+    const reference = `KIRCT_${crypto.randomBytes(8).toString("hex")}`;
+
+    const response = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        email: user.email,
+        amount,
+        reference,
+        callback_url: `${process.env.FRONTEND_URL}/payment-callback`,
+        metadata: {
+          courseId,
+          userId,
+          attendanceType
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.data.status !== true) {
+      return res.json({ success: false, message: "Paystack init failed" });
+    }
+
+    return res.json({
+      success: true,
+      reference,
+      email: user.email,
+      amount,
+      authorization_url: response.data.data.authorization_url,
+    });
+
+  } catch (error) {
+    console.error("Purchase Error:", error.response?.data || error.message);
+    return res.status(500).json({ success: false, message: "Payment link not generated" });
+  }
+};
+
+const verifyPayment = async (req, res) => {
+  const { reference, userId, courseId } = req.body;
+
+  if (!reference || !userId || !courseId) {
+    return res.status(400).json({ success: false, message: "Missing required fields: reference, userId, courseId" });
+  }
+
+  let paystackResponse;
+  try {
+    paystackResponse = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+  } catch (paystackError) {
+    const paystackMsg = paystackError.response?.data?.message || "Paystack verification failed";
+    console.error("Paystack verify error:", paystackMsg);
+    return res.status(400).json({ success: false, message: paystackMsg });
+  }
+
+  try {
+    const paymentData = paystackResponse.data;
+    const txStatus = paymentData.data?.status;
+    const status = txStatus === "success" ? "Completed" : "Failed";
+    const amount = (paymentData.data?.amount || 0) / 100;
+    const { attendanceType } = paymentData.data?.metadata || {};
+
+    const existing = await Purchase.findOne({ courseId, userId });
+    if (!existing) {
+      await Purchase.create({
+        courseId,
+        userId,
+        amount,
+        attendanceType: attendanceType || "Physical",
+        status,
+      });
+    } else if (existing.status !== "Completed" && status === "Completed") {
+      existing.status = "Completed";
+      await existing.save();
+    }
+
+    if (status === "Completed") {
+      const [updatedUser, updatedCourse] = await Promise.all([
+        userModel.findByIdAndUpdate(userId, { $addToSet: { enrolledCourses: courseId } }, { new: true }),
+        Course.findByIdAndUpdate(courseId, { $addToSet: { enrolledStudents: userId } }, { new: true }).populate('educator', 'name email'),
+      ]);
+
+      const finalAttendanceType = attendanceType || "Physical";
+      const emailPromises = [];
+
+      if (updatedUser?.email) {
+        emailPromises.push(
+          sendEnrollmentConfirmationEmail({
+            studentName: updatedUser.name,
+            studentEmail: updatedUser.email,
+            courseTitle: updatedCourse?.courseTitle || "Course",
+            courseMode: updatedCourse?.courseMode || "",
+            attendanceType: finalAttendanceType,
+            courseAddress: updatedCourse?.courseAddress || "",
+            meetingUrl: updatedCourse?.meetingUrl || "",
+            classSchedule: updatedCourse?.classSchedule || "",
+            amount,
+          }).catch(err => console.error("Student email error:", err.message))
+        );
+      }
+
+      if (updatedCourse?.educator?.email) {
+        emailPromises.push(
+          sendEnrollmentNotificationEmail({
+            educatorName: updatedCourse.educator.name,
+            educatorEmail: updatedCourse.educator.email,
+            studentName: updatedUser?.name || "A student",
+            studentEmail: updatedUser?.email || "N/A",
+            courseTitle: updatedCourse.courseTitle,
+            attendanceType: finalAttendanceType,
+            amount,
+          }).catch(err => console.error("Educator email error:", err.message))
+        );
+      }
+
+      Promise.all(emailPromises);
+
+      return res.json({ success: true, message: "Enrollment successful" });
+    } else {
+      return res.status(400).json({ success: false, message: `Payment status: ${txStatus}` });
+    }
+  } catch (error) {
+    console.error("verifyPayment DB error:", error.message);
+    return res.status(500).json({ success: false, message: "Error saving enrollment: " + error.message });
+  }
+};
+
+const updateCourseProgress = async (req, res) => {
+  try {
+    const { courseId, lectureId } = req.body;
+    const userId = req.body.userId;
+
+    if (!courseId || !lectureId) {
+      return res.json({ success: false, message: "courseId and lectureId are required" });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.json({ success: false, message: "Course not found" });
+    }
+
+    const totalLectures = course.courseContent.reduce(
+      (sum, chapter) => sum + chapter.chapterContent.length,
+      0
+    );
+
+    let progress = await CourseProgress.findOne({ userId, courseId });
+    if (!progress) {
+      progress = new CourseProgress({ userId, courseId, lectureCompleted: [] });
+    }
+
+    if (!progress.lectureCompleted.includes(lectureId)) {
+      progress.lectureCompleted.push(lectureId);
+    }
+
+    if (progress.lectureCompleted.length >= totalLectures) {
+      progress.completed = true;
+    }
+
+    await progress.save();
+
+    res.json({
+      success: true,
+      message: progress.completed
+        ? "Congratulations! You completed this course 🎉"
+        : "Lecture marked as completed",
+      progress,
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const getUserCourseProgress = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    const userId = req.body.userId;
+    const progressData = await CourseProgress.findOne({ userId, courseId });
+    res.json({ success: true, progressData });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const addUserRating = async (req, res) => {
+  const { courseId, rating } = req.body;
+  const userId = req.body.userId;
+
+  if (!courseId || !userId || !rating || rating < 1 || rating > 5) {
+    return res.json({ success: false, message: "Invalid Details" });
+  }
+
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.json({ success: false, message: "Course Not Found" });
+    }
+
+    const user = await userModel.findById(userId);
+    if (!user || !user.enrolledCourses.includes(courseId)) {
+      return res.json({ success: false, message: "User did not enroll in this course" });
+    }
+
+    const existingRatingIndex = course.courseRatings.findIndex(
+      (r) => r.userId.toString() === userId.toString()
+    );
+
+    if (existingRatingIndex >= 0) {
+      course.courseRatings[existingRatingIndex].rating = rating;
+    } else {
+      course.courseRatings.push({ userId, rating });
+    }
+
+    await course.save();
+    return res.json({ success: true, message: "Rating added successfully!" });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const fetchQuiz = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const quiz = await Quiz.findOne({ courseId }).populate("courseId", "courseTitle");
+
+    if (!quiz) {
+      return res.status(404).json({ message: "No quiz found for this course" });
+    }
+
+    res.json({ success: true, quiz });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const sumbitQuiz = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId, answers } = req.body;
+
+    const quiz = await Quiz.findOne({ courseId }).populate("courseId", "name");
+    if (!quiz) return res.status(404).json({ message: "Quiz not found" });
+
+    let correctCount = 0;
+    const evaluatedAnswers = answers.map((ans) => {
+      const question = quiz.questions.id(ans.questionId);
+      if (!question) return null;
+
+      const isCorrect = question.correctAnswer === ans.selectedOption;
+      if (isCorrect) correctCount++;
+
+      return {
+        questionId: ans.questionId,
+        selectedOption: ans.selectedOption,
+        isCorrect,
+      };
+    }).filter(Boolean);
+
+    const score = Math.round((correctCount / quiz.questions.length) * 100);
+    const passMark = 50;
+
+    const progress = await CourseProgress.findOneAndUpdate(
+      { userId, courseId },
+      {
+        quizTaken: true,
+        quizScore: score,
+        quizPassed: score >= passMark,
+        quizAnswers: evaluatedAnswers,
+      },
+      { new: true, upsert: true }
+    );
+
+    res.json({
+      message: "Quiz submitted",
+      score,
+      passed: score >= passMark,
+      totalQuestions: quiz.questions.length,
+      correctCount,
+      progress,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const retakeCourse = async (req, res) => {
+  try {
+    const { courseId, userId } = req.body;
+
+    await CourseProgress.findOneAndUpdate(
+      { userId, courseId },
+      {
+        completed: false,
+        lectureCompleted: [],
+        quizTaken: false,
+        quizScore: 0,
+        quizPassed: false,
+        quizAnswers: []
+      }
+    );
+
+    res.json({ success: true, message: "Progress reset successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getCertificate = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId } = req.body;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const progress = await CourseProgress.findOne({ userId, courseId })
+      .populate({
+        path: "courseId",
+        populate: { path: "educator", select: "name email" },
+      });
+
+    if (!progress) {
+      return res.status(404).json({ success: false, message: "Course progress not found" });
+    }
+
+    const quiz = await Quiz.findOne({ courseId });
+    const hasQuiz = !!quiz;
+
+    if (hasQuiz) {
+      if (!progress.quizPassed) {
+        return res.status(403).json({ success: false, message: "You must pass the quiz to generate a certificate" });
+      }
+    } else {
+      if (!progress.completed) {
+        return res.status(403).json({ success: false, message: "You must complete the course to generate a certificate" });
+      }
+    }
+
+    if (progress.certificateUrl) {
+      return res.json({ success: true, certificateUrl: progress.certificateUrl });
+    }
+
+    const course = progress.courseId;
+    const certificateId = uuidv4().slice(0, 8).toUpperCase();
+    const today = new Date().toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    let isResSent = false;
+    const doc = new PDFDocument({
+      size: "A4",
+      layout: "landscape",
+      margins: { top: 0, left: 0, right: 0, bottom: 0 },
+    });
+
+    let buffers = [];
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", async () => {
+      try {
+        const pdfBuffer = Buffer.concat(buffers);
+        await uploadCertificateToCloudinary(pdfBuffer, progress, certificateId);
+        if (!isResSent) {
+          isResSent = true;
+          res.json({ success: true, certificateUrl: progress.certificateUrl });
+        }
+      } catch (err) {
+        if (!isResSent) {
+          isResSent = true;
+          res.status(500).json({
+            success: false,
+            message: "Certificate upload failed",
+            error: err.message,
+          });
+        }
+      }
+    });
+
+    try {
+      await buildCertificateContent(doc, user, course, certificateId, today);
+      doc.end();
+    } catch (err) {
+      if (!isResSent) {
+        isResSent = true;
+        res.status(500).json({ success: false, message: "Certificate generation failed", error: err.message });
+      }
+    }
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const user = await userModel.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired verification token." });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = null;
+    await user.save();
+
+    const loginToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    return res.json({
+      success: true,
+      message: "Email verified successfully!",
+      token: loginToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      }
+    });
+  } catch (error) {
+    console.error("Verification error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Aliases for userRouter.js
+const verifyCoursePayment = verifyPayment;
+const getCourseProgress = getUserCourseProgress;
+const resetProgress = retakeCourse;
+const addRating = addUserRating;
+const getStudentQuiz = fetchQuiz;
+const submitStudentQuiz = sumbitQuiz;
+
+export {
+  registerUser,
+  userLogin,
+  getProfile,
+  updateProfile,
+  bookAppointment,
+  listAppointment,
+  cancelAppoint,
+  paystackPayment,
+  paystackVerifyPayment,
+  forgotPassword,
+  resetPassword,
+  getAppointmentById,
+  getAllCourses,
+  getCourseById,
+  purchaseCourse,
+  verifyCoursePayment,
+  getCourseProgress,
+  updateCourseProgress,
+  resetProgress,
+  addRating,
+  userEnrolledCourses,
+  getStudentQuiz,
+  submitStudentQuiz,
+  getCertificate,
+  verifyEmail
+};

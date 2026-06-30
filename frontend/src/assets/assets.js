@@ -1,7 +1,6 @@
 import appointment_img from './appointment_img.png'
 import header_img from './header_img.png'
 import group_profiles from './group_profiles.png'
-import profile_pic from './profile_pic.png'
 import contact_image from './contact_image.png'
 import about_image from './about_image.png'
 import logo from './logo.svg'
@@ -30,13 +29,48 @@ import doc12 from './doc12.png'
 import doc13 from './doc13.png'
 import doc14 from './doc14.png'
 import doc15 from './doc15.png'
+import profile_pic from './profile_pic.png'
 import Dermatologist from './Dermatologist.svg'
 import Gastroenterologist from './Gastroenterologist.svg'
 import General_physician from './General_physician.svg'
 import Gynecologist from './Gynecologist.svg'
 import Neurologist from './Neurologist.svg'
 import Pediatricians from './Pediatricians.svg'
-
+import search_icon from './search_icon.svg'
+import upload_area from './upload_area.svg'
+import sketch from './sktech.svg'
+import microsoft_logo from './microsoft_logo.svg'
+import walmart_logo from './walmart_logo.svg'
+import accenture_logo from './accenture_logo.svg'
+import adobe_logo from './adobe_logo.svg'
+import paypal_logo from './paypal_logo.svg'
+import course_1_thumbnail from './course_1.png'
+import course_2_thumbnail from './course_2.png'
+import course_3_thumbnail from './course_3.png'
+import course_4_thumbnail from './course_4.png'
+import star from './rating_star.svg'
+import star_blank from './star_dull_icon.svg'
+import down_arrow_icon from './down_arrow_icon.svg'
+import list_icon from './list_icon.svg'
+import edit_icon from './edit.svg'
+import time_left_clock_icon from './time_left_clock_icon.svg'
+import time_clock_icon from './time_clock_icon.svg'
+import user_icon from './user_icon.svg'
+import home_icon from './home_icon.svg'
+import add_icon from './add_icon.svg'
+import my_course_icon from './my_course_icon.svg'
+import person_tick_icon from './person_tick_icon.svg'
+import facebook_icon from './facebook_icon.svg'
+import instagram_icon from './instagram_icon.svg'
+import twitter_icon from './twitter_icon.svg'
+import file_upload_icon from './file_upload_icon.svg'
+import appointments_icon from './appointments_icon.svg'
+import earning_icon from './earning_icon.svg'
+import patients_icon from './patients_icon.svg'
+import play_icon from './play_icon.svg'
+import blue_tick_icon from './blue_tick_icon.svg'
+import course_4 from './course_4.png'
+import lesson_icon from './lesson_icon.svg'
 
 export const assets = {
     appointment_img,
@@ -55,7 +89,48 @@ export const assets = {
     dropdown_icon,
     upload_icon,
     stripe_logo,
-    razorpay_logo
+    razorpay_logo,
+    edit_icon,
+    search_icon,
+    sketch,
+    microsoft_logo,
+    walmart_logo,
+    accenture_logo,
+    adobe_logo,
+    paypal_logo,
+    course_1_thumbnail,
+    course_2_thumbnail,
+    course_3_thumbnail,
+    course_4_thumbnail,
+    star,
+    star_blank,
+    profile_img_1: profile_pic,
+    profile_img_2: profile_pic,
+    profile_img_3: profile_pic,
+    upload_area,
+    down_arrow_icon,
+    time_left_clock_icon,
+    time_clock_icon,
+    user_icon,
+    home_icon,
+    add_icon,
+    my_course_icon,
+    person_tick_icon,
+    facebook_icon,
+    instagram_icon,
+    twitter_icon,
+    course_4,
+    file_upload_icon,
+    appointments_icon,
+    earning_icon,
+    patients_icon,
+    profile_img: profile_pic,
+    profile_img2: profile_pic,
+    profile_img3: profile_pic,
+    play_icon,
+    blue_tick_icon,
+    lesson_icon,
+    list_icon
 }
 
 export const specialityData = [

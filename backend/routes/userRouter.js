@@ -1,5 +1,5 @@
 import express from 'express';
-import { bookAppointment, cancelAppoint, getProfile, listAppointment, paystackPayment, registerUser, updateProfile, userLogin, paystackVerifyPayment, forgotPassword, resetPassword, getAppointmentById,  } from '../controllers/userController.js';
+import { bookAppointment, cancelAppoint, getProfile, listAppointment, paystackPayment, registerUser, updateProfile, userLogin, paystackVerifyPayment, forgotPassword, resetPassword, getAppointmentById, getAllCourses, getCourseById, purchaseCourse, verifyCoursePayment, getCourseProgress, updateCourseProgress, resetProgress, addRating, userEnrolledCourses, getStudentQuiz, submitStudentQuiz } from '../controllers/userController.js';
 import authUser from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
 
@@ -20,7 +20,18 @@ userRouter.post('/paystack-verify', authUser, paystackVerifyPayment);
 userRouter.post('/forgot-password',  forgotPassword)
 userRouter.post("/reset-password/:token", resetPassword);
 userRouter.get('/appointment/:appointmentId', authUser, getAppointmentById);
+userRouter.get('/all-courses', getAllCourses);
+userRouter.get('/course/:courseId', getCourseById);
 
-
+// Student course enrollment & progress routes
+userRouter.post('/purchase', authUser, purchaseCourse);
+userRouter.post('/verify-payment', authUser, verifyCoursePayment);
+userRouter.post('/get-course-progress', authUser, getCourseProgress);
+userRouter.post('/update-course-progress', authUser, updateCourseProgress);
+userRouter.post('/reset-progress', authUser, resetProgress);
+userRouter.post('/add-rating', authUser, addRating);
+userRouter.get('/enrolled-course', authUser, userEnrolledCourses);
+userRouter.get('/quiz/:courseId', authUser, getStudentQuiz);
+userRouter.post('/quiz/:courseId/submit', authUser, submitStudentQuiz);
 
 export default userRouter;

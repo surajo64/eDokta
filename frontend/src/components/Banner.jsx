@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { assets } from '../assets/assets'
-import { useNavigate } from 'react-router-dom'
+import { AppContext } from '../context/AppContext'
 
 const Banner = () => {
-  const navigate = useNavigate();
+  const { setShowLogin } = useContext(AppContext);
   return (
     <div className='flex bg-primary rounded-lg px-6 sm:px-10 md:px-14 lg:px-12 my-20 md:mx-10'>
       {/*------ left side ------*/}
@@ -13,7 +13,7 @@ const Banner = () => {
               <p className='mt-4'>Book Appointment</p>
               <p>With 100+ Trusted Doctors</p>
             </div>
-            <button onClick={() => {navigate('/login'); scrollTo(0,0)}} className='bg-white text-gray-600 py-3 px-8 text-sm sm:text-base rounded-full mt-6 hover:scale-105 transition-all'>Create Account</button>
+            <button onClick={() => {setShowLogin(true); scrollTo(0,0)}} className='bg-white text-gray-600 py-3 px-8 text-sm sm:text-base rounded-full mt-6 hover:scale-105 transition-all'>Create Account</button>
       </div>
         {/*------ left side ------*/}
         <div className='hidden md:block md:w-1/2 lg:w-[370px] relative'>

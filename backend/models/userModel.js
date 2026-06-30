@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   resetPasswordToken: { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null },
-  
+  enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }]
 },{ timestamps: true } // Auto-add createdAt & updatedAt
 )
 

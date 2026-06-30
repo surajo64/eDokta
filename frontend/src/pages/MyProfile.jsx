@@ -21,7 +21,6 @@ const MyProfile = () => {
     formData.append("email", userData.email);
     formData.append("phone", userData.phone);
     formData.append("dob", userData.dob);
-    formData.append("nin", userData.nin);
     formData.append("gender", userData.gender);
     formData.append("address", userData.address);
 
@@ -90,17 +89,6 @@ const MyProfile = () => {
               : <p><strong>Email:</strong>{userData.email}</p>
           }
 
-
-{
-            editMode
-              ?
-              <input
-                type="text" name="nin" value={userData.nin} placeholder="NIN"
-                onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
-                className="border p-2 w-full rounded" />
-              : <p><strong>NIN: </strong>{userData.nin}</p>
-          }
-
           {
             editMode
               ?
@@ -160,8 +148,6 @@ const MyProfile = () => {
               <p><strong>Address:</strong> {userData.address}</p>
             )
           }
-
-
 
         </div>
 

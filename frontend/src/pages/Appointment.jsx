@@ -10,7 +10,7 @@ import { useLoading } from '../context/loadingContext';
 const Appointment = () => {
   const { docId } = useParams();
 
-  const { doctors, currencySymbol, backendUrl, getDoctorsData, token } = useContext(AppContext);
+  const { doctors, currencySymbol, backendUrl, getDoctorsData, token, setShowLogin } = useContext(AppContext);
   const navigate = useNavigate();
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
   const [docInfo, setDocInfo] = useState(null);
@@ -78,7 +78,8 @@ const Appointment = () => {
   const bookAppointment = async () => {
     if (!token) {
       toast.warn("Please Login to Book an Appointment!")
-      return navigate('/login')
+      setShowLogin(true)
+      return
     }
     setLoading(true);
     try {
