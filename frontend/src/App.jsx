@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react'
+import React, { useEffect, useContext, useState } from 'react'
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -47,6 +47,7 @@ import DoctorsList from './pages/admin/DoctorList.jsx'
 import AllPatient from './pages/admin/allPatient.jsx'
 import AddAdmin from './pages/admin/addAdmin.jsx'
 import AdminList from './pages/admin/allAdmin.jsx'
+import EducatorList from './pages/admin/allEducators.jsx'
 import AddSpeciality from './pages/admin/addSpeciality.jsx'
 
 // Doctor Pages
@@ -72,6 +73,8 @@ import AllUsers from './pages/educator/users.jsx'
 import AddEducator from './pages/educator/addEducator.jsx'
 import EducatorAllCourses from './pages/educator/allCourses.jsx'
 import EducatorAdminDashboard from './pages/educator/admin-dashboard.jsx'
+import EducatorProfile from './pages/educator/EducatorProfile.jsx'
+import EducatorSettings from './pages/educator/Settings.jsx'
 
 const App = () => {
   const { setLoading } = useLoading();
@@ -80,9 +83,11 @@ const App = () => {
   const { atoken } = useContext(AppContext);
 
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
+    setMobileMenuOpen(false);
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, [location]);
@@ -112,52 +117,60 @@ const App = () => {
     location.pathname.startsWith('/all-users') ||
     location.pathname.startsWith('/add-educator') ||
     location.pathname.startsWith('/educator-courses-all') ||
-    location.pathname.startsWith('/educator-admin-dashboard');
+    location.pathname.startsWith('/educator-admin-dashboard') ||
+    location.pathname.startsWith('/educator-profile') ||
+    location.pathname.startsWith('/educator-settings') ||
+    location.pathname.startsWith('/educator-list');
 
   if (isManagementRoute) {
     return (
       <>
         <ToastContainer />
         {aToken || dToken || atoken ? (
-          <div className='bg-gray-200 min-h-screen p-4 overflow-auto'>
-            <AdminNavbar />
-            <div className='flex items-start'>
-              <AdminSidebar />
-              <Routes>
-                {/* Admin Routes */}
-                <Route path='/admin-dashboard' element={<Dashboard />} />
-                <Route path='/add-doctor' element={<AddDoctor />} />
-                <Route path='/all-appointment' element={<AllAppointment />} />
-                <Route path='/doctors-list' element={<DoctorsList />} />
-                <Route path='/patient-list' element={<AllPatient />} />
-                <Route path='/add-admin' element={<AddAdmin />} />
-                <Route path='/admin-list' element={<AdminList />} />
-                <Route path='/fee-speciality' element={<AddSpeciality />} />
+          <div className='bg-slate-50 min-h-screen flex overflow-hidden'>
+            <AdminSidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+            <div className='flex-1 flex flex-col min-w-0 overflow-hidden relative'>
+              <AdminNavbar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+              <div className='flex-1 overflow-y-auto bg-slate-50'>
+                <Routes>
+                  {/* Admin Routes */}
+                  <Route path='/admin-dashboard' element={<Dashboard />} />
+                  <Route path='/add-doctor' element={<AddDoctor />} />
+                  <Route path='/all-appointment' element={<AllAppointment />} />
+                  <Route path='/doctors-list' element={<DoctorsList />} />
+                  <Route path='/patient-list' element={<AllPatient />} />
+                  <Route path='/add-admin' element={<AddAdmin />} />
+                  <Route path='/admin-list' element={<AdminList />} />
+                  <Route path='/educator-list' element={<EducatorList />} />
+                  <Route path='/fee-speciality' element={<AddSpeciality />} />
 
-                {/* Doctor Routes */}
-                <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
-                <Route path='/doctor-appointment' element={<DoctorMyAppointment />} />
-                <Route path='/doctor-profile' element={<DoctorProfile />} />
-                <Route path='/change-password' element={<DoctorChangePassword />} />
-                <Route path='/telehealthRoom/:appointmentId' element={<DoctorTelehealthRoom />} />
+                  {/* Doctor Routes */}
+                  <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
+                  <Route path='/doctor-appointment' element={<DoctorMyAppointment />} />
+                  <Route path='/doctor-profile' element={<DoctorProfile />} />
+                  <Route path='/change-password' element={<DoctorChangePassword />} />
+                  <Route path='/telehealthRoom/:appointmentId' element={<DoctorTelehealthRoom />} />
 
-                {/* Educator Routes */}
-                <Route path='/educator-dashboard' element={<EducatorDashboard />} />
-                <Route path='/educator-my-courses' element={<MyCourses />} />
-                <Route path='/add-course' element={<AddCourse />} />
-                <Route path='/update-course/:id' element={<UpdateCourse />} />
-                <Route path='/students-enrolled' element={<StudentEnrolled />} />
-                <Route path='/all-enrolled-students' element={<AllStudentEnrolled />} />
-                <Route path='/add-quiz' element={<AddQuiz />} />
-                <Route path='/quiz-list' element={<QuizList />} />
-                <Route path='/all-users' element={<AllUsers />} />
-                <Route path='/add-educator' element={<AddEducator />} />
-                <Route path='/educator-courses-all' element={<EducatorAllCourses />} />
-                <Route path='/educator-admin-dashboard' element={<EducatorAdminDashboard />} />
+                  {/* Educator Routes */}
+                  <Route path='/educator-dashboard' element={<EducatorDashboard />} />
+                  <Route path='/educator-my-courses' element={<MyCourses />} />
+                  <Route path='/add-course' element={<AddCourse />} />
+                  <Route path='/update-course/:id' element={<UpdateCourse />} />
+                  <Route path='/students-enrolled' element={<StudentEnrolled />} />
+                  <Route path='/all-enrolled-students' element={<AllStudentEnrolled />} />
+                  <Route path='/add-quiz' element={<AddQuiz />} />
+                  <Route path='/quiz-list' element={<QuizList />} />
+                  <Route path='/all-users' element={<AllUsers />} />
+                  <Route path='/add-educator' element={<AddEducator />} />
+                  <Route path='/educator-courses-all' element={<EducatorAllCourses />} />
+                  <Route path='/educator-profile' element={<EducatorProfile />} />
+                  <Route path='/educator-settings' element={<EducatorSettings />} />
+                  <Route path='/educator-admin-dashboard' element={<EducatorAdminDashboard />} />
 
-                {/* Redirect unknown paths */}
-                <Route path="*" element={<Navigate to={aToken ? '/admin-dashboard' : dToken ? '/doctor-dashboard' : '/educator-dashboard'} />} />
-              </Routes>
+                  {/* Redirect unknown paths */}
+                  <Route path="*" element={<Navigate to={aToken ? '/admin-dashboard' : dToken ? '/doctor-dashboard' : '/educator-dashboard'} />} />
+                </Routes>
+              </div>
             </div>
           </div>
         ) : (

@@ -10,7 +10,7 @@ const AllUsers = () => {
     const [users, setUsers] = useState(null);
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [roleFilter, setRoleFilter] = useState('all');
+    const [roleFilter, setRoleFilter] = useState('student');
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, user: null });
     const [deactivateDialog, setDeactivateDialog] = useState({ isOpen: false, user: null });
     const [editModal, setEditModal] = useState({ isOpen: false, user: null });
@@ -165,7 +165,7 @@ const AllUsers = () => {
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
             <div className="w-full h-full bg-white shadow-xl rounded-3xl p-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <h1 className="text-2xl font-bold text-gray-800">All Users</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Student List</h1>
 
                     <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                         {/* Search Input */}
@@ -176,43 +176,21 @@ const AllUsers = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 w-full md:w-64"
                         />
-
-                        {/* Role Filter */}
-                        <select
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        >
-                            <option value="all">All Roles</option>
-                            <option value="student">Students</option>
-                            <option value="educator">Educators</option>
-                            <option value="admin">Admins</option>
-                        </select>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Total Users</p>
-                        <p className="text-2xl font-bold text-blue-700">{users.length}</p>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Students</p>
+                        <p className="text-sm text-gray-600">Total Students</p>
                         <p className="text-2xl font-bold text-green-700">
                             {users.filter(u => u.userType === 'student').length}
                         </p>
                     </div>
-                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Educators</p>
-                        <p className="text-2xl font-bold text-purple-700">
-                            {users.filter(u => u.userType === 'educator').length}
-                        </p>
-                    </div>
-                    <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-4 rounded-lg">
-                        <p className="text-sm text-gray-600">Admins</p>
-                        <p className="text-2xl font-bold text-amber-700">
-                            {users.filter(u => u.userType === 'admin').length}
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Active Students</p>
+                        <p className="text-2xl font-bold text-blue-700">
+                            {users.filter(u => u.userType === 'student' && u.isActive !== false).length}
                         </p>
                     </div>
                 </div>
@@ -226,7 +204,6 @@ const AllUsers = () => {
                                 <th className="px-4 py-3 font-semibold">User</th>
                                 <th className="px-4 py-3 font-semibold">Email</th>
                                 <th className="px-4 py-3 font-semibold">Phone</th>
-                                <th className="px-4 py-3 font-semibold">Role</th>
                                 <th className="px-4 py-3 font-semibold">Status</th>
                                 <th className="px-4 py-3 font-semibold">Joined</th>
                                 <th className="px-4 py-3 font-semibold">Actions</th>
@@ -259,11 +236,7 @@ const AllUsers = () => {
 
                                         <td className="px-4 py-3 text-gray-600">{user.phone}</td>
 
-                                        <td className="px-4 py-3">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.userType)}`}>
-                                                {user.userType.charAt(0).toUpperCase() + user.userType.slice(1)}
-                                            </span>
-                                        </td>
+
 
                                         <td className="px-4 py-3">
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${user.isActive !== false
@@ -319,7 +292,7 @@ const AllUsers = () => {
 
                 {/* Results Count */}
                 <div className="mt-4 text-sm text-gray-600">
-                    Showing {filteredUsers.length} of {users.length} users
+                    Showing {filteredUsers.length} of {users.filter(u => u.userType === 'student').length} students
                 </div>
             </div>
 

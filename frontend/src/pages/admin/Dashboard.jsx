@@ -10,43 +10,50 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 import { useState } from 'react'
+import axios from 'axios'
+import { Users, BookOpen, TrendingUp, DollarSign, List } from 'lucide-react'
 
 
 const Dashboard = () => {
-
-
-  const { aToken, cancelAppointment, currencySymbol, dashboardData, getDashboardData } = useContext(AdminContext)
+  const { aToken, cancelAppointment, currencySymbol, dashboardData, getDashboardData, backendUrl } = useContext(AdminContext)
   // State for calendar
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showRecord, setShowRecord] = useState(false);
   const [recordType, setRecordType] = useState("");
   const { setLoading } = useLoading();
+  const [eduDashboardData, setEduDashboardData] = useState(null);
 
   // Data for the chart
-  const data = [
-    { name: "Doctors", count: dashboardData.doctors, color: "#6366F1" },
-    { name: "Patients", count: dashboardData.users, color: "#22C55E" },
-    { name: "Appointments", count: dashboardData.appointments, color: "#EAB308" },
-  ];
+  const data = dashboardData ? [
+    { name: "Doctors", count: dashboardData.doctors || 0, color: "#6366F1" },
+    { name: "Patients", count: dashboardData.users || 0, color: "#22C55E" },
+    { name: "Appointments", count: dashboardData.appointments || 0, color: "#EAB308" },
+  ] : [];
+
   const handleShowRecord = (type) => {
     setLoading(true);
     const timer = setTimeout(() => setLoading(false), 300);
     setRecordType(type);
     setShowRecord(true);
-
   }
 
-
+  const fetchEduDashboardData = async () => {
+    try {
+      const { data } = await axios.get(backendUrl + '/api/educator/admin-dashboard', { headers: { atoken: aToken } });
+      if (data.success) {
+        setEduDashboardData(data.dashboardData);
+      }
+    } catch (error) {
+      console.error("Error fetching educator dashboard data:", error);
+    }
+  };
 
   useEffect(() => {
     if (aToken) {
       getDashboardData()
+      fetchEduDashboardData()
     }
-
   }, [aToken])
-
-
-
 
   return dashboardData && assets && (
     <div className="m-5">
@@ -152,6 +159,117 @@ const Dashboard = () => {
           </p>
         </div>
       </div>
+
+      {/* Education Portal Overview */}
+      {eduDashboardData && (
+        <div className="mt-10 mb-8">
+          <div className="border-t border-slate-200 pt-8 mb-6">
+            <h2 className="text-xl font-bold text-slate-800">Education Portal Overview</h2>
+            <p className="text-slate-500 text-sm mt-1">Key metrics and enrollments for your online learning platform</p>
+          </div>
+
+          {/* Educator Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Total Students */}
+            <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4 hover:shadow-lg transition-all duration-300">
+              <div className="p-4 rounded-xl bg-blue-100 text-blue-600">
+                <Users size={24} />
+              </div>
+              <div>
+                <h4 className="text-2xl font-bold text-slate-800">{eduDashboardData.totalStudents}</h4>
+                <p className="text-sm font-semibold text-slate-400">Total Students</p>
+              </div>
+            </div>
+
+            {/* Total Courses */}
+            <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4 hover:shadow-lg transition-all duration-300">
+              <div className="p-4 rounded-xl bg-purple-100 text-purple-600">
+                <BookOpen size={24} />
+              </div>
+              <div>
+                <h4 className="text-2xl font-bold text-slate-800">{eduDashboardData.totalCourses}</h4>
+                <p className="text-sm font-semibold text-slate-400">Total Courses</p>
+              </div>
+            </div>
+
+            {/* Active Enrollments */}
+            <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4 hover:shadow-lg transition-all duration-300">
+              <div className="p-4 rounded-xl bg-green-100 text-green-600">
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <h4 className="text-2xl font-bold text-slate-800">{eduDashboardData.enrolledStudentsData?.length || 0}</h4>
+                <p className="text-sm font-semibold text-slate-400">Active Enrollments</p>
+              </div>
+            </div>
+
+            {/* Total Earnings */}
+            <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4 hover:shadow-lg transition-all duration-300">
+              <div className="p-4 rounded-xl bg-amber-100 text-amber-600">
+                <DollarSign size={24} />
+              </div>
+              <div>
+                <h4 className="text-2xl font-bold text-slate-800">
+                  {currencySymbol} {eduDashboardData.totalEarnings.toLocaleString()}
+                </h4>
+                <p className="text-sm font-semibold text-slate-400">Total Earnings (Edu)</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Latest Enrollments Table */}
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <List size={20} />
+              </div>
+              <h3 className="font-bold text-lg text-slate-800">Latest Enrollments</h3>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-4 text-left font-semibold">#</th>
+                    <th className="px-6 py-4 text-left font-semibold">Student Name</th>
+                    <th className="px-6 py-4 text-left font-semibold">Course Title</th>
+                    <th className="px-6 py-4 text-left font-semibold">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {eduDashboardData.enrolledStudentsData?.length > 0 ? (
+                    eduDashboardData.enrolledStudentsData.map((item, index) => (
+                      <tr key={index} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <img
+                              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
+                              src={item.student?.image || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop'}
+                              alt="Student"
+                            />
+                            <span className="font-semibold text-slate-800">{item.student?.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{item.courseTitle}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                          {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-8 text-center text-slate-400 font-semibold">
+                        No enrollments found yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
 
 

@@ -13,6 +13,8 @@ const allAdmin = () => {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const { setLoading } = useLoading();
 
+  const filteredAdmins = admins?.filter(item => !item.role || item.role === 'admin') || [];
+
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -119,8 +121,8 @@ const allAdmin = () => {
           <p>Actions</p>
         </div>
 
-        {admins?.length > 0 ? (
-          admins.map((item, index) => (
+        {filteredAdmins.length > 0 ? (
+          filteredAdmins.map((item, index) => (
             <div key={index} className="flex flex-wrap justify-between sm:grid sm:grid-cols-[0.5fr_3fr_3fr_2fr_2fr] items-center text-gray-500 py-3 px-6 border-b hover:bg-blue-50">
               <p>{index + 1}</p>
               <p>{item.name}</p>
