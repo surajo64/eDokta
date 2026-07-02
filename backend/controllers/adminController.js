@@ -1,7 +1,7 @@
 // API for adding doctor
 
 import validator from 'validator'
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from 'cloudinary';
 import { parse } from 'dotenv';
 import doctorModel from '../models/doctorsModel.js';

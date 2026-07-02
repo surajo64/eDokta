@@ -5,7 +5,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import Purchase from '../models/purchaseModel.js'
 import User from '../models/userModel.js'
 import Admin from '../models/adminModel.js'
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken'
 import CourseProgress from '../models/courseProgressModel.js'
 import Quiz from '../models/quizMode.js'
