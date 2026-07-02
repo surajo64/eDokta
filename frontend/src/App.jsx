@@ -9,10 +9,10 @@ import Appointment from './pages/Appointment'
 import MyAppointment from './pages/MyAppointment'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import MyProfile from './pages/Myprofile'
+import MyProfile from './pages/MyProfile.jsx'
 import ResetPassword from './pages/resetPassword'
 import ForgotPassword from './pages/ForgotPassword '
-import TelehealthRoom from './pages/telehealthRoom'
+import TelehealthRoom from './pages/telehealthRoom.jsx'
 import Test from './pages/test'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
