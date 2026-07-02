@@ -30,7 +30,7 @@ import PaymentCallback from './pages/payment-callback.jsx'
 // Admin/Doctor Contexts
 import { AdminContext } from './context/adminContext'
 import { DoctorContext } from './context/doctorContext'
-import { AppContext } from './context/AppContext'
+import { AppContext } from './context/AppContext.jsx'
 
 // Admin/Doctor Layout Components
 import AdminNavbar from './components/admin/Navbar'
