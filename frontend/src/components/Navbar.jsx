@@ -9,6 +9,8 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const [showMenu, setShowMenu] = useState(false);
+  const [mobileDigitalClinicOpen, setMobileDigitalClinicOpen] = useState(false);
+  const [mobileEducationOpen, setMobileEducationOpen] = useState(false);
   const { token, setToken, userData, showLogin, setShowLogin } = useContext(AppContext)
 
   const logout = () => {
@@ -178,19 +180,131 @@ const Navbar = () => {
           }
           <img onClick={() => setShowMenu(true)} className='w-6 md:hidden' src={assets.menu_icon} alt="" />
           {/*-------mobile menu --------*/}
-          <div className={` ${showMenu ? 'fixed w-full' : 'h-0 w-0'} md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all`}>
+          <div className={`${showMenu ? 'fixed w-full' : 'h-0 w-0'} md:hidden right-0 top-0 bottom-0 z-20 overflow-y-auto bg-white transition-all`}>
 
-            <div className='flex items-center justify-between px-5 py-6'>
-              <img className='w-20' src="logo" alt="" />
-              <img className='w-7' onClick={() => setShowMenu(false)} src={assets.cross_icon} alt="" />
+            <div className='flex items-center justify-between px-5 py-6 border-b border-gray-100'>
+              <img onClick={() => { navigate('/'); setShowMenu(false); }} className='w-32 cursor-pointer' src={logo} alt="Logo" />
+              <img className='w-7 cursor-pointer' onClick={() => setShowMenu(false)} src={assets.cross_icon} alt="Close Menu" />
             </div>
 
-            <ul className='flex flex-col items-center gap-2 mt-5 px-5 text-lg font-medium'>
-              <NavLink onClick={() => showMenu(false)} to='/'><p className='px-4 py-2 rounded inline-block'>Home</p></NavLink>
-              <NavLink onClick={() => showMenu(false)} to='/doctors'><p className='px-4 py-2 rounded inline-block'>All Doctors</p></NavLink>
-              <NavLink onClick={() => showMenu(false)} to='/about'><p className='px-4 py-2 rounded inline-block'>About Us</p></NavLink>
-              <NavLink onClick={() => showMenu(false)} to='/contact'><p className='px-4 py-2 rounded inline-block'>Contact Us</p></NavLink>
-            </ul>
+            <div className='flex flex-col gap-2 mt-5 px-5 text-lg font-medium'>
+              <NavLink onClick={() => setShowMenu(false)} to='/'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Home</p>
+              </NavLink>
+
+              <NavLink onClick={() => setShowMenu(false)} to='/about'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>About Us</p>
+              </NavLink>
+
+              <NavLink onClick={() => setShowMenu(false)} to='/doctors'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>All Doctors</p>
+              </NavLink>
+
+              {/* Collapsible Digital Clinic */}
+              <div className='w-full'>
+                <button 
+                  onClick={() => setMobileDigitalClinicOpen(!mobileDigitalClinicOpen)}
+                  className='w-full flex items-center justify-between px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition text-left text-lg font-medium'
+                >
+                  <span>Digital Clinic</span>
+                  <span className={`transform transition-transform text-xs duration-200 ${mobileDigitalClinicOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${mobileDigitalClinicOpen ? 'max-h-[400px] opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                  <div className='flex flex-col gap-1 border-l-2 border-gray-100 pl-3'>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/teleconsultation" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Teleconsultation
+                    </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/home-healthcare" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Home Healthcare
+                    </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/wellness-checkup" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Wellness Clinic & Medical Checkup
+                    </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/medical-tourism" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Medical Tourism & Booking
+                    </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/travel-health" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Travel Health
+                    </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/e-pharmacy" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      e-Pharmacy
+                    </NavLink>
+                  </div>
+                </div>
+              </div>
+
+              <NavLink onClick={() => setShowMenu(false)} to='/ruralhealth'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Rural Health</p>
+              </NavLink>
+
+              <NavLink onClick={() => setShowMenu(false)} to='/insurance'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Takaful Insurance</p>
+              </NavLink>
+
+              {/* Collapsible Education & Research */}
+              <div className='w-full'>
+                <button 
+                  onClick={() => setMobileEducationOpen(!mobileEducationOpen)}
+                  className='w-full flex items-center justify-between px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition text-left text-lg font-medium'
+                >
+                  <span>Education & Research</span>
+                  <span className={`transform transition-transform text-xs duration-200 ${mobileEducationOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${mobileEducationOpen ? 'max-h-[200px] opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                  <div className='flex flex-col gap-1 border-l-2 border-gray-100 pl-3'>
+                    <NavLink onClick={() => setShowMenu(false)} to="/education-training" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Education and Training
+                    </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/digital-health-research" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Digital Health Research
+                    </NavLink>
+                  </div>
+                </div>
+              </div>
+
+              <NavLink onClick={() => setShowMenu(false)} to='/contact'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Contact Us</p>
+              </NavLink>
+
+              {/* Authentication section inside Mobile Menu */}
+              <div className='mt-6 pt-6 border-t border-gray-100 mb-8'>
+                {token && userData ? (
+                  <div className='flex flex-col gap-4'>
+                    <div className='flex items-center gap-3 px-4'>
+                      <img className='w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm' src={userData.image} alt="User profile" />
+                      <div>
+                        <p className='font-semibold text-gray-800 leading-tight'>{userData.name}</p>
+                        <p className='text-xs text-gray-500 mt-0.5'>{userData.email}</p>
+                      </div>
+                    </div>
+                    <div className='flex flex-col gap-1 mt-2'>
+                      <NavLink onClick={() => setShowMenu(false)} to='/my-profile'>
+                        <p className='px-4 py-2 text-base text-gray-700 hover:text-primary hover:bg-gray-50 rounded block transition'>My Profile</p>
+                      </NavLink>
+                      <NavLink onClick={() => setShowMenu(false)} to='/my-appointment'>
+                        <p className='px-4 py-2 text-base text-gray-700 hover:text-primary hover:bg-gray-50 rounded block transition'>My Appointment</p>
+                      </NavLink>
+                      <NavLink onClick={() => setShowMenu(false)} to='/my-courses'>
+                        <p className='px-4 py-2 text-base text-gray-700 hover:text-primary hover:bg-gray-50 rounded block transition'>My Enrollments</p>
+                      </NavLink>
+                      <button 
+                        onClick={() => { logout(); setShowMenu(false); }} 
+                        className='w-full text-left px-4 py-2 text-base text-red-600 hover:bg-red-50 rounded block transition mt-2 font-medium'
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => { setShowLogin(true); setShowMenu(false); }} 
+                    className='w-full bg-primary text-white py-3 rounded-full font-medium hover:bg-opacity-95 transition shadow-sm'
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
