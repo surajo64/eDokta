@@ -104,7 +104,7 @@ const courseDetails = () => {
 
   return courseData ? (
     <>
-      <div className="flex md:flex-row flex-col-revers gap-10 relative items-start justify-between md:px-36 px-8 md:pt-30 pt-20 text-left">
+      <div className="flex md:flex-row flex-col-reverse gap-10 relative items-start justify-between md:px-36 px-8 md:pt-30 pt-20 text-left">
 
         <div className='absolute top-0 w-full h-section-height -z-1 bg-gradient-to-b from-cyn-100/70'>
 
@@ -116,7 +116,7 @@ const courseDetails = () => {
           <p className="pt-4 md:text-base text-sm"
             dangerouslySetInnerHTML={{ __html: courseData.courseDescription.slice(0, 200) || "No description available.", }} />
           {/* review rating */}
-          <div className='flex items-center space-x-2 pt-3 pb-2 text-sm'>
+          <div className='flex flex-wrap items-center gap-2 pt-3 pb-2 text-sm'>
             <p>{calculateRating(courseData)}</p>
 
             <div className='flex'>
@@ -153,7 +153,7 @@ const courseDetails = () => {
                 <div key={index} className='border border-gray-300 bg-white mb-2 rounded'>
                   <div className='flex items-center justify-between px-4 py-3 cursor-pointer select-none' onClick={() => toggleSection(index)}>
                     <div className='flex items-center gap-2'>
-                      <img className={`transfor transition-transform ${openSection[index] ? 'rotate-180' : ''}`}
+                      <img className={`transform transition-transform ${openSection[index] ? 'rotate-180' : ''}`}
                         src={assets.down_arrow_icon} alt="arrow icon" />
                       <p className='font-medium md:text-base text-sm'>{chapter.chapterTitle}</p>
                     </div>
@@ -195,7 +195,7 @@ const courseDetails = () => {
         </div>
 
         {/* right colunm */}
-        < div className='max-w-course-card z-10 shadow-custom-card rounded-t md:rounded-none overflow-hidden bg-white min-w[300px] sm:min-w-[420px]'>
+        < div className='w-full max-w-course-card z-10 shadow-custom-card rounded-t md:rounded-none overflow-hidden bg-white min-w-[300px] sm:min-w-[420px]'>
           {
             playerData ?
               <YouTube videoId={playerData.videoId} opts={{ playerVars: { autoplay: 1 } }} iframeClassName='w-full aspect-video' />
@@ -210,7 +210,7 @@ const courseDetails = () => {
               <img className='w-3.5' src={assets.time_left_clock_icon} alt="time left clock" />
               <p className='text-red-600'> <span className='font-medium'>5 Days</span> Left at this Price</p>
             </div>
-            <div className='flex gap-3 items--center pt-2'>
+            <div className='flex gap-3 items-center pt-2'>
               {/* Dynamic Price Display */}
               <p className='text-gray-800 md:text-3xl text-2xl font-semibold'>
                 {currencySymbol}
