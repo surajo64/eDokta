@@ -10,7 +10,6 @@ const Navbar = () => {
 
   const [showMenu, setShowMenu] = useState(false);
   const [mobileDigitalClinicOpen, setMobileDigitalClinicOpen] = useState(false);
-  const [mobileEducationOpen, setMobileEducationOpen] = useState(false);
   const { token, setToken, userData, showLogin, setShowLogin } = useContext(AppContext)
 
   const logout = () => {
@@ -37,6 +36,12 @@ const Navbar = () => {
 
           <NavLink to='/doctors'>
             <li className='py-1'>ALL DOCTORS</li>
+            <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
+          </NavLink>
+
+
+          <NavLink to='/education-training'>
+            <li className='py-1'>eDOKTA ACADEMY</li>
             <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
           </NavLink>
 
@@ -108,51 +113,27 @@ const Navbar = () => {
                     e-Pharmacy
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink
+                    to="/ruralhealth"
+                    className="block px-4 py-2 hover:bg-primary hover:text-white"
+                  >
+                    Rural Health
+                  </NavLink>
+                </li>
               </ul>
             </div>
           </li>
-
-
-          <NavLink to='/ruralhealth'>
-            <li className='py-1'>RURAL HEALTH</li>
-            <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
-          </NavLink>
 
           <NavLink to='/insurance'>
             <li className='py-1'>TAKAFUL INSURANCE</li>
             <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
           </NavLink>
 
-          <li className="relative group">
-            <div className='relative'>
-              <button className="py-1 flex items-center gap-1">
-                EDUCATION & RESEARCH
-                <span className="text-xs">▼</span>
-              </button>
-
-              {/* Invisible bridge */}
-              <div className="absolute left-0 right-0 h-3 bg-transparent"></div>
-
-              <ul className="absolute left-0 mt-2 w-64 bg-white shadow-lg rounded-lg opacity-0 group-hover:opacity-100 group-hover:visible invisible transition duration-200 z-50">
-                <li>
-                  <NavLink
-                    to="/education-training"
-                    className="block px-4 py-2 hover:bg-primary hover:text-white"
-                  >
-                    Education and Training
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink
-                    to="/digital-health-research"
-                    className="block px-4 py-2 hover:bg-primary hover:text-white"
-                  >
-                    Digital Health Research
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-          </li>
+          <NavLink to='/research'>
+            <li className='py-1'>RESEARCH</li>
+            <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
+          </NavLink>
 
 
           <NavLink to='/contact'>
@@ -189,27 +170,31 @@ const Navbar = () => {
 
             <div className='flex flex-col gap-2 mt-5 px-5 text-lg font-medium'>
               <NavLink onClick={() => setShowMenu(false)} to='/'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Home</p>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>HOME</p>
               </NavLink>
 
               <NavLink onClick={() => setShowMenu(false)} to='/about'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>About Us</p>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>ABOUT</p>
               </NavLink>
 
               <NavLink onClick={() => setShowMenu(false)} to='/doctors'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>All Doctors</p>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>ALL DOCTORS</p>
+              </NavLink>
+
+              <NavLink onClick={() => setShowMenu(false)} to='/education-training'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>eDOKTA ACADEMY</p>
               </NavLink>
 
               {/* Collapsible Digital Clinic */}
               <div className='w-full'>
-                <button 
+                <button
                   onClick={() => setMobileDigitalClinicOpen(!mobileDigitalClinicOpen)}
                   className='w-full flex items-center justify-between px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition text-left text-lg font-medium'
                 >
-                  <span>Digital Clinic</span>
+                  <span>DIGITAL CLINIC</span>
                   <span className={`transform transition-transform text-xs duration-200 ${mobileDigitalClinicOpen ? 'rotate-180' : ''}`}>▼</span>
                 </button>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileDigitalClinicOpen ? 'max-h-[400px] opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                <div className={`overflow-hidden transition-all duration-300 ${mobileDigitalClinicOpen ? 'max-h-[500px] opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                   <div className='flex flex-col gap-1 border-l-2 border-gray-100 pl-3'>
                     <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/teleconsultation" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
                       Teleconsultation
@@ -229,41 +214,23 @@ const Navbar = () => {
                     <NavLink onClick={() => setShowMenu(false)} to="/digital-clinic/e-pharmacy" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
                       e-Pharmacy
                     </NavLink>
+                    <NavLink onClick={() => setShowMenu(false)} to="/ruralhealth" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
+                      Rural Health
+                    </NavLink>
                   </div>
                 </div>
               </div>
-
-              <NavLink onClick={() => setShowMenu(false)} to='/ruralhealth'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Rural Health</p>
-              </NavLink>
 
               <NavLink onClick={() => setShowMenu(false)} to='/insurance'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Takaful Insurance</p>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>TAKAFUL INSURANCE</p>
               </NavLink>
 
-              {/* Collapsible Education & Research */}
-              <div className='w-full'>
-                <button 
-                  onClick={() => setMobileEducationOpen(!mobileEducationOpen)}
-                  className='w-full flex items-center justify-between px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition text-left text-lg font-medium'
-                >
-                  <span>Education & Research</span>
-                  <span className={`transform transition-transform text-xs duration-200 ${mobileEducationOpen ? 'rotate-180' : ''}`}>▼</span>
-                </button>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileEducationOpen ? 'max-h-[200px] opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                  <div className='flex flex-col gap-1 border-l-2 border-gray-100 pl-3'>
-                    <NavLink onClick={() => setShowMenu(false)} to="/education-training" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
-                      Education and Training
-                    </NavLink>
-                    <NavLink onClick={() => setShowMenu(false)} to="/digital-health-research" className="px-4 py-2 text-base text-gray-600 hover:text-primary hover:bg-gray-50 rounded block transition">
-                      Digital Health Research
-                    </NavLink>
-                  </div>
-                </div>
-              </div>
+              <NavLink onClick={() => setShowMenu(false)} to='/research'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>RESEARCH</p>
+              </NavLink>
 
               <NavLink onClick={() => setShowMenu(false)} to='/contact'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>Contact Us</p>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>CONTACT</p>
               </NavLink>
 
               {/* Authentication section inside Mobile Menu */}
@@ -287,8 +254,8 @@ const Navbar = () => {
                       <NavLink onClick={() => setShowMenu(false)} to='/my-courses'>
                         <p className='px-4 py-2 text-base text-gray-700 hover:text-primary hover:bg-gray-50 rounded block transition'>My Enrollments</p>
                       </NavLink>
-                      <button 
-                        onClick={() => { logout(); setShowMenu(false); }} 
+                      <button
+                        onClick={() => { logout(); setShowMenu(false); }}
                         className='w-full text-left px-4 py-2 text-base text-red-600 hover:bg-red-50 rounded block transition mt-2 font-medium'
                       >
                         Logout
@@ -296,8 +263,8 @@ const Navbar = () => {
                     </div>
                   </div>
                 ) : (
-                  <button 
-                    onClick={() => { setShowLogin(true); setShowMenu(false); }} 
+                  <button
+                    onClick={() => { setShowLogin(true); setShowMenu(false); }}
                     className='w-full bg-primary text-white py-3 rounded-full font-medium hover:bg-opacity-95 transition shadow-sm'
                   >
                     Login

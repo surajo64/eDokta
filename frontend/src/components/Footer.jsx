@@ -45,7 +45,7 @@ const Footer = () => {
       {/*------ cptyright Section ------*/}
         <div>
           <hr/>
-          <p className='py-5 text-sm text-center'>Copyright 2025@ eDokta Healthcare.</p>
+          <p className='py-5 text-sm text-center'>Copyright {new Date().getFullYear()}@ eDokta Healthcare.</p>
         </div>
 
     </div>
