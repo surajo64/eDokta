@@ -1,11 +1,27 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
-import logo from "../assets/logo.png";
+
+const loadJitsiScript = (callback) => {
+  const existingScript = document.getElementById("jitsi-external-api");
+  if (existingScript) {
+    callback();
+    return;
+  }
+  const script = document.createElement("script");
+  script.src = "https://meet.jit.si/external_api.js";
+  script.id = "jitsi-external-api";
+  script.async = true;
+  script.onload = () => {
+    callback();
+  };
+  document.body.appendChild(script);
+};
 
 const TelehealthRoom = () => {
   const { appointmentId } = useParams();
+  const navigate = useNavigate();
   const [meetingUrl, setMeetingUrl] = useState("");
   const { backendUrl, token, userData, loadUserProfileData } = useContext(AppContext);
 
@@ -41,24 +57,48 @@ const TelehealthRoom = () => {
     fetchMeetingUrl();
   }, [appointmentId, backendUrl, token]);
 
-  const getFullMeetingUrl = () => {
-    if (!meetingUrl) return "";
-    let url = meetingUrl;
-    if (url.includes("#")) {
-      url = url.split("#")[0];
-    }
-    const params = ["config.prejoinConfig.enabled=false"];
-    if (userData?.name) {
-      params.push(`userInfo.displayName="${userData.name}"`);
-    }
-    if (userData?.email) {
-      params.push(`userInfo.email="${userData.email}"`);
-    }
-    return `${url}#${params.join("&")}`;
-  };
+  useEffect(() => {
+    if (!meetingUrl || (token && !userData)) return;
 
+    let api = null;
+    const domain = meetingUrl.split("/")[2];
+    const roomName = meetingUrl.split("/").pop().split("#")[0].split("?")[0];
 
-  if (!meetingUrl) {
+    loadJitsiScript(() => {
+      if (!document.getElementById("jitsi-container")) return;
+
+      const options = {
+        roomName: roomName,
+        width: "100%",
+        height: "100%",
+        parentNode: document.getElementById("jitsi-container"),
+        configOverwrite: {
+          prejoinConfig: { enabled: false }
+        },
+        userInfo: {
+          displayName: userData?.name || "",
+          email: userData?.email || ""
+        }
+      };
+
+      api = new window.JitsiMeetExternalAPI(domain, options);
+
+      const handleClose = () => {
+        navigate("/my-appointment");
+      };
+
+      api.addEventListener("videoConferenceLeft", handleClose);
+      api.addEventListener("readyToClose", handleClose);
+    });
+
+    return () => {
+      if (api) {
+        api.dispose();
+      }
+    };
+  }, [meetingUrl, userData, token, navigate]);
+
+  if (!meetingUrl || (token && !userData)) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-700">
         Loading meeting...
@@ -68,24 +108,18 @@ const TelehealthRoom = () => {
 
   return (
     <div className="relative w-full h-screen bg-black">
-      <iframe
-        src={getFullMeetingUrl()}
-        allow="camera; microphone; fullscreen; display-capture"
-        className="w-full h-full"
-        id="jitsiConferenceFrame0"
-        style={{ border: "0" }}
-        title="Telehealth Meeting"
-      />
+      {/* Jitsi Meeting Container */}
+      <div id="jitsi-container" className="w-full h-full" />
 
       {/* Top-left logo */}
       <img
         src="https://res.cloudinary.com/dyii5iyqq/image/upload/v1757340004/edoktor_fxnilb.jpg"
         alt="eDokta"
-        className="absolute top-4 left-4 w-28 sm:w-32 z-50"
+        className="absolute top-4 left-4 w-28 sm:w-32 z-50 pointer-events-none"
       />
 
       {/* Bottom-right overlay to cover Jitsi watermark */}
-      <div className="absolute bottom-3 text-white right-3 bg-black/70 px-2 py-1 rounded z-50 flex items-center">
+      <div className="absolute bottom-3 text-white right-3 bg-black/70 px-2 py-1 rounded z-50 flex items-center pointer-events-none">
         <p>Powered by eDokta...</p>
       </div>
     </div>
