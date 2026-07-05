@@ -43,7 +43,11 @@ const Telehealth = () => {
     }
     const params = ["config.prejoinConfig.enabled=false"];
     if (docData?.name) {
-      params.push(`userInfo.displayName="${docData.name}"`);
+      let displayName = docData.name.trim();
+      if (!displayName.toLowerCase().startsWith("dr.") && !displayName.toLowerCase().startsWith("dr ")) {
+        displayName = `Dr. ${displayName}`;
+      }
+      params.push(`userInfo.displayName="${displayName}"`);
     }
     if (docData?.email) {
       params.push(`userInfo.email="${docData.email}"`);
