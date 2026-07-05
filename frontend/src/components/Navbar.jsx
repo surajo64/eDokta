@@ -180,10 +180,6 @@ const Navbar = () => {
                 <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>ALL DOCTORS</p>
               </NavLink>
 
-              <NavLink onClick={() => setShowMenu(false)} to='/education-training'>
-                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>eDOKTA ACADEMY</p>
-              </NavLink>
-
               {/* Collapsible Digital Clinic */}
               <div className='w-full'>
                 <button
@@ -223,7 +219,9 @@ const Navbar = () => {
               <NavLink onClick={() => setShowMenu(false)} to='/insurance'>
                 <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>TAKAFUL INSURANCE</p>
               </NavLink>
-
+              <NavLink onClick={() => setShowMenu(false)} to='/education-training'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>eDOKTA ACADEMY</p>
+              </NavLink>
               <NavLink onClick={() => setShowMenu(false)} to='/research'>
                 <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>RESEARCH</p>
               </NavLink>
