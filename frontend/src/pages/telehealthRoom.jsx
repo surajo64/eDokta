@@ -74,6 +74,7 @@ const TelehealthRoom = () => {
 
     api.addEventListener("videoConferenceLeft", handleClose);
     api.addEventListener("readyToClose", handleClose);
+    api.addEventListener("participantLeft", handleClose);
 
     return () => {
       api.dispose();
