@@ -40,12 +40,6 @@ const Navbar = () => {
           </NavLink>
 
 
-          <NavLink to='/education-training'>
-            <li className='py-1'>eDOKTA ACADEMY</li>
-            <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
-          </NavLink>
-
-
           {/* DIGITAL CLINIC with fixed dropdown */}
           <li className="relative group">
             <div className="relative">
@@ -127,6 +121,11 @@ const Navbar = () => {
 
           <NavLink to='/insurance'>
             <li className='py-1'>TAKAFUL INSURANCE</li>
+            <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
+          </NavLink>
+
+          <NavLink to='/education-training'>
+            <li className='py-1'>eDOKTA ACADEMY</li>
             <hr className='border-none outline-none h-0.5 bg-primary w3/5 m-auto hidden' />
           </NavLink>
 
@@ -224,7 +223,9 @@ const Navbar = () => {
               <NavLink onClick={() => setShowMenu(false)} to='/insurance'>
                 <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>TAKAFUL INSURANCE</p>
               </NavLink>
-
+              <NavLink onClick={() => setShowMenu(false)} to='/education-training'>
+                <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>eDOKTA ACADEMY</p>
+              </NavLink>
               <NavLink onClick={() => setShowMenu(false)} to='/research'>
                 <p className='px-4 py-2 rounded hover:bg-gray-50 hover:text-primary transition block'>RESEARCH</p>
               </NavLink>
