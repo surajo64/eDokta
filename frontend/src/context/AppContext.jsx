@@ -180,9 +180,13 @@ const AppContextProvider = (props) => {
     try {
       const { data } = await axios.get(backendUrl + '/api/user/get-profile', { headers: { token } })
       if (data.success) {
-        setUserData(data.userData)
+        let user = data.userData;
+        if (user && typeof user.address === 'object' && user.address !== null) {
+          user.address = `${user.address.line1 || ''}${user.address.line1 && user.address.city ? ', ' : ''}${user.address.city || ''}`;
+        }
+        setUserData(user)
       } else {
-        toast.error(error.message)
+        toast.error(data.message)
       }
 
     } catch (error) {

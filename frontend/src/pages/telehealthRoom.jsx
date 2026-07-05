@@ -7,33 +7,55 @@ import logo from "../assets/logo.png";
 const TelehealthRoom = () => {
   const { appointmentId } = useParams();
   const [meetingUrl, setMeetingUrl] = useState("");
-  const { backendUrl, token } = useContext(AppContext);
+  const { backendUrl, token, userData, loadUserProfileData } = useContext(AppContext);
 
   useEffect(() => {
-  const fetchMeetingUrl = async () => {
-    try {
-      const { data } = await axios.get(
-        `${backendUrl}/api/user/appointment/${appointmentId}`,
-        { headers: { token } }
-      );
-
-      if (data.success) {
-        let url = data.appointment.meetingUrl;
-
-        // Ensure URL starts with https://
-        if (url && !url.startsWith("http")) {
-          url = `https://${url}`;
-        }
-
-        setMeetingUrl(url);
-      }
-    } catch (error) {
-      console.error("Error fetching meeting URL:", error);
+    if (token && !userData) {
+      loadUserProfileData();
     }
-  };
+  }, [token, userData]);
 
-  fetchMeetingUrl();
-}, [appointmentId, backendUrl, token]);
+  useEffect(() => {
+    const fetchMeetingUrl = async () => {
+      try {
+        const { data } = await axios.get(
+          `${backendUrl}/api/user/appointment/${appointmentId}`,
+          { headers: { token } }
+        );
+
+        if (data.success) {
+          let url = data.appointment.meetingUrl;
+
+          // Ensure URL starts with https://
+          if (url && !url.startsWith("http")) {
+            url = `https://${url}`;
+          }
+
+          setMeetingUrl(url);
+        }
+      } catch (error) {
+        console.error("Error fetching meeting URL:", error);
+      }
+    };
+
+    fetchMeetingUrl();
+  }, [appointmentId, backendUrl, token]);
+
+  const getFullMeetingUrl = () => {
+    if (!meetingUrl) return "";
+    let url = meetingUrl;
+    if (url.includes("#")) {
+      url = url.split("#")[0];
+    }
+    const params = ["config.prejoinConfig.enabled=false"];
+    if (userData?.name) {
+      params.push(`userInfo.displayName="${userData.name}"`);
+    }
+    if (userData?.email) {
+      params.push(`userInfo.email="${userData.email}"`);
+    }
+    return `${url}#${params.join("&")}`;
+  };
 
 
   if (!meetingUrl) {
@@ -46,9 +68,8 @@ const TelehealthRoom = () => {
 
   return (
     <div className="relative w-full h-screen bg-black">
-      {/* Jitsi Meeting */}
       <iframe
-        src={meetingUrl}
+        src={getFullMeetingUrl()}
         allow="camera; microphone; fullscreen; display-capture"
         className="w-full h-full"
         id="jitsiConferenceFrame0"

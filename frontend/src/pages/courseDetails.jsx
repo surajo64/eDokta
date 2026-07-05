@@ -61,7 +61,7 @@ const courseDetails = () => {
     try {
       const { data } = await axios.post(
         backendUrl + "/api/user/purchase",
-        { courseId: courseData._id, attendanceType },
+        { courseId: courseData._id, attendanceType, callbackUrl: window.location.origin + '/payment-callback' },
         { headers: { token: localStorage.getItem("token") } }
       );
 

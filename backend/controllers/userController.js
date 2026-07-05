@@ -331,6 +331,10 @@ const paystackPayment = async (req, res) => {
     return res.json({ success: false, message: "Appointment Cancelled or Not Found!" });
   }
 
+  // Get origin from request headers to dynamically handle localhost vs 127.0.0.1 origin mismatch
+  const origin = req.get('origin') || 'http://localhost:5173';
+  const callback_url = req.body.callbackUrl || `${origin}/My-Appointment`;
+
   // Define payment data for Paystack API
   const paymentData = {
     email: appointmentData.userData.email,
@@ -338,7 +342,7 @@ const paystackPayment = async (req, res) => {
     currency: process.env.CURRENCY,
     reference: `paystack_${appointmentId}_${Date.now()}`, // ✅ Unique reference
     publicKey: 'pk_test_f645ba01086466837dfd44382514e240781667da',
-    callback_url: "http://localhost:5173/My-Appointment",
+    callback_url: callback_url,
   };
 
   // Call Paystack API
@@ -576,13 +580,17 @@ const purchaseCourse = async (req, res) => {
     const amount = price * 100;
     const reference = `KIRCT_${crypto.randomBytes(8).toString("hex")}`;
 
+    // Get origin from request headers to dynamically handle localhost vs 127.0.0.1 origin mismatch
+    const origin = req.get('origin') || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const callback_url = req.body.callbackUrl || `${origin}/payment-callback`;
+
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
         email: user.email,
         amount,
         reference,
-        callback_url: `${process.env.FRONTEND_URL}/payment-callback`,
+        callback_url: callback_url,
         metadata: {
           courseId,
           userId,

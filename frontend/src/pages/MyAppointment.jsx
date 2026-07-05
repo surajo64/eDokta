@@ -58,7 +58,7 @@ const navigate = useNavigate()
     try {
       const { data } = await axios.post(
         backendUrl + '/api/user/paystack-payment',
-        { appointmentId },
+        { appointmentId, callbackUrl: window.location.origin + '/My-Appointment' },
         { headers: { token } }
       );
 

@@ -6,7 +6,13 @@ import { DoctorContext } from "../../context/doctorContext";
 const Telehealth = () => {
   const { appointmentId } = useParams();
   const [meetingUrl, setMeetingUrl] = useState("");
-  const { backendUrl, dToken } = useContext(DoctorContext);
+  const { backendUrl, dToken, docData, getProfileData } = useContext(DoctorContext);
+
+  useEffect(() => {
+    if (dToken && !docData) {
+      getProfileData();
+    }
+  }, [dToken, docData]);
 
   useEffect(() => {
     const fetchMeetingUrl = async () => {
@@ -26,6 +32,25 @@ const Telehealth = () => {
     fetchMeetingUrl();
   }, [appointmentId, backendUrl, dToken]);
 
+  const getFullMeetingUrl = () => {
+    if (!meetingUrl) return "";
+    let url = meetingUrl;
+    if (!url.startsWith("http")) {
+      url = `https://${url}`;
+    }
+    if (url.includes("#")) {
+      url = url.split("#")[0];
+    }
+    const params = ["config.prejoinConfig.enabled=false"];
+    if (docData?.name) {
+      params.push(`userInfo.displayName="${docData.name}"`);
+    }
+    if (docData?.email) {
+      params.push(`userInfo.email="${docData.email}"`);
+    }
+    return `${url}#${params.join("&")}`;
+  };
+
   if (!meetingUrl) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-700">
@@ -36,9 +61,8 @@ const Telehealth = () => {
 
   return (
     <div className="relative w-full h-screen bg-black">
-      {/* Jitsi Meeting */}
       <iframe
-        src={meetingUrl}
+        src={getFullMeetingUrl()}
         allow="camera; microphone; fullscreen; display-capture"
         className="w-full h-full"
         id="jitsiConferenceFrame0"

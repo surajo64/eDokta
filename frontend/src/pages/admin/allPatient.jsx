@@ -135,7 +135,11 @@ const allPatient = () => {
               <p className="max-sm:hidden">{calculateAge(item.dob)}</p>
               <p>{item.email}</p>
               <p>{item.phone}</p>
-              <p>{item.address}</p>
+              <p>
+                {typeof item.address === 'object' && item.address !== null
+                  ? `${item.address.line1 || ''}${item.address.line1 && item.address.city ? ', ' : ''}${item.address.city || ''}`
+                  : item.address || 'Not Selected'}
+              </p>
               <p>{item.gender}</p>
               <div className="flex items-center gap-2">
 
