@@ -3,22 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { DoctorContext } from "../../context/doctorContext";
 
-const loadJitsiScript = (callback) => {
-  const existingScript = document.getElementById("jitsi-external-api");
-  if (existingScript) {
-    callback();
-    return;
-  }
-  const script = document.createElement("script");
-  script.src = "https://meet.jit.si/external_api.js";
-  script.id = "jitsi-external-api";
-  script.async = true;
-  script.onload = () => {
-    callback();
-  };
-  document.body.appendChild(script);
-};
-
 const Telehealth = () => {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
@@ -53,46 +37,44 @@ const Telehealth = () => {
   useEffect(() => {
     if (!meetingUrl || (dToken && !docData)) return;
 
-    let api = null;
+    if (!window.JitsiMeetExternalAPI) {
+      console.error("Jitsi Meet External API script not loaded.");
+      return;
+    }
+
     const domain = meetingUrl.split("/")[2];
     const roomName = meetingUrl.split("/").pop().split("#")[0].split("?")[0];
 
-    loadJitsiScript(() => {
-      if (!document.getElementById("jitsi-container")) return;
+    let displayName = docData?.name ? docData.name.trim() : "";
+    if (displayName && !displayName.toLowerCase().startsWith("dr.") && !displayName.toLowerCase().startsWith("dr ")) {
+      displayName = `Dr. ${displayName}`;
+    }
 
-      let displayName = docData?.name ? docData.name.trim() : "";
-      if (displayName && !displayName.toLowerCase().startsWith("dr.") && !displayName.toLowerCase().startsWith("dr ")) {
-        displayName = `Dr. ${displayName}`;
+    const options = {
+      roomName: roomName,
+      width: "100%",
+      height: "100%",
+      parentNode: document.getElementById("jitsi-container"),
+      configOverwrite: {
+        prejoinConfig: { enabled: false }
+      },
+      userInfo: {
+        displayName: displayName,
+        email: docData?.email || ""
       }
+    };
 
-      const options = {
-        roomName: roomName,
-        width: "100%",
-        height: "100%",
-        parentNode: document.getElementById("jitsi-container"),
-        configOverwrite: {
-          prejoinConfig: { enabled: false }
-        },
-        userInfo: {
-          displayName: displayName,
-          email: docData?.email || ""
-        }
-      };
+    const api = new window.JitsiMeetExternalAPI(domain, options);
 
-      api = new window.JitsiMeetExternalAPI(domain, options);
+    const handleClose = () => {
+      navigate("/doctor-appointment");
+    };
 
-      const handleClose = () => {
-        navigate("/doctor-appointment");
-      };
-
-      api.addEventListener("videoConferenceLeft", handleClose);
-      api.addEventListener("readyToClose", handleClose);
-    });
+    api.addEventListener("videoConferenceLeft", handleClose);
+    api.addEventListener("readyToClose", handleClose);
 
     return () => {
-      if (api) {
-        api.dispose();
-      }
+      api.dispose();
     };
   }, [meetingUrl, docData, dToken, navigate]);
 

@@ -3,22 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 
-const loadJitsiScript = (callback) => {
-  const existingScript = document.getElementById("jitsi-external-api");
-  if (existingScript) {
-    callback();
-    return;
-  }
-  const script = document.createElement("script");
-  script.src = "https://meet.jit.si/external_api.js";
-  script.id = "jitsi-external-api";
-  script.async = true;
-  script.onload = () => {
-    callback();
-  };
-  document.body.appendChild(script);
-};
-
 const TelehealthRoom = () => {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
@@ -60,41 +44,39 @@ const TelehealthRoom = () => {
   useEffect(() => {
     if (!meetingUrl || (token && !userData)) return;
 
-    let api = null;
+    if (!window.JitsiMeetExternalAPI) {
+      console.error("Jitsi Meet External API script not loaded.");
+      return;
+    }
+
     const domain = meetingUrl.split("/")[2];
     const roomName = meetingUrl.split("/").pop().split("#")[0].split("?")[0];
 
-    loadJitsiScript(() => {
-      if (!document.getElementById("jitsi-container")) return;
+    const options = {
+      roomName: roomName,
+      width: "100%",
+      height: "100%",
+      parentNode: document.getElementById("jitsi-container"),
+      configOverwrite: {
+        prejoinConfig: { enabled: false }
+      },
+      userInfo: {
+        displayName: userData?.name || "",
+        email: userData?.email || ""
+      }
+    };
 
-      const options = {
-        roomName: roomName,
-        width: "100%",
-        height: "100%",
-        parentNode: document.getElementById("jitsi-container"),
-        configOverwrite: {
-          prejoinConfig: { enabled: false }
-        },
-        userInfo: {
-          displayName: userData?.name || "",
-          email: userData?.email || ""
-        }
-      };
+    const api = new window.JitsiMeetExternalAPI(domain, options);
 
-      api = new window.JitsiMeetExternalAPI(domain, options);
+    const handleClose = () => {
+      navigate("/My-Appointment");
+    };
 
-      const handleClose = () => {
-        navigate("/my-appointment");
-      };
-
-      api.addEventListener("videoConferenceLeft", handleClose);
-      api.addEventListener("readyToClose", handleClose);
-    });
+    api.addEventListener("videoConferenceLeft", handleClose);
+    api.addEventListener("readyToClose", handleClose);
 
     return () => {
-      if (api) {
-        api.dispose();
-      }
+      api.dispose();
     };
   }, [meetingUrl, userData, token, navigate]);
 
