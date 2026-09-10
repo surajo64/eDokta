@@ -8,6 +8,7 @@ const Footer = () => {
   const quickLinks = [
     { label: 'Home', path: '/' },
     { label: 'About Us', path: '/about' },
+    { label: 'Research & Evidence', path: '/research' },
     { label: 'All Doctors', path: '/doctors' },
     { label: 'Contact', path: '/contact' },
     { label: 'Privacy & Policy', path: '#' },

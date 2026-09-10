@@ -30,6 +30,7 @@ import Player from './pages/player.jsx'
 import Quiz from './pages/quize.jsx'
 import StudentMyCourses from './pages/myCourses.jsx'
 import PaymentCallback from './pages/payment-callback.jsx'
+import Research from './pages/Research.jsx'
 
 // Admin/Doctor Contexts
 import { AdminContext } from './context/adminContext'
@@ -256,6 +257,7 @@ const App = () => {
           <Route path='/quiz/:id' element={<Quiz />} />
           <Route path='/my-courses' element={<StudentMyCourses />} />
           <Route path='/payment-callback' element={<PaymentCallback />} />
+          <Route path='/research' element={<Research />} />
           <Route path='/test' element={<Test />} />
         </Routes>
       </div>
