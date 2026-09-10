@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import connectDB from "./config/mongodb.js";
 import User from "./models/userModel.js";
 import Admin from "./models/adminModel.js";
 import Doctor from "./models/doctorsModel.js";
 import Course from "./models/courseModel.js";
+
+import HomeCareTeam from "./models/homeCareTeamModel.js";
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +29,60 @@ const seedDatabase = async () => {
     await Doctor.deleteMany({ email: "doctor@edokta.com" });
     await User.deleteMany({ email: { $in: ["patient@edokta.com", "student@edokta.com"] } });
     await Course.deleteMany({ courseTitle: "Introduction to Clinical Anatomy" });
+    await HomeCareTeam.deleteMany({ teamName: { $in: ["General Home Care Team Alpha", "Cardiology Home Care Unit 1", "Maternal & Child Home Care Team"] } });
+
+    console.log("Seeding Home Healthcare Teams...");
+    await HomeCareTeam.create([
+      {
+        teamName: "General Home Care Team Alpha",
+        speciality: "General Service",
+        doctorName: "Dr. Abubakar Shehu",
+        doctorTitle: "Consultant Physician (Lead)",
+        nurseName: "Nurse Grace Danjuma",
+        nurseTitle: "Senior Registered Nurse",
+        assistantName: "Usman Bello",
+        assistantTitle: "Clinical Assistant & Phlebotomist",
+        fees: 45000,
+        image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=600&auto=format&fit=crop",
+        about: "Complete general medical home evaluation, vitals screening, IV fluid administration, and basic lab sample collection at your doorstep.",
+        location: "Abuja Metropolitan & Environs",
+        servicesIncluded: ["Full Physical Examination", "Blood Pressure & Vitals Audit", "Blood Sample Collection", "IV Therapy & Medication"],
+        available: true
+      },
+      {
+        teamName: "Cardiology Home Care Unit 1",
+        speciality: "Cardiology Service",
+        doctorName: "Dr. Farida Aliyu",
+        doctorTitle: "Consultant Cardiologist (Lead)",
+        nurseName: "Nurse Samuel Kalu",
+        nurseTitle: "ICU / Cardiac Care Nurse",
+        assistantName: "Fatima Umar",
+        assistantTitle: "ECG Technician & Caregiver",
+        fees: 65000,
+        image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=600&auto=format&fit=crop",
+        about: "Specialized cardiac home monitoring team equipped with portable ECG/EKG machines, blood pressure telemetry, and heart failure care management.",
+        location: "Abuja, Ikeja & Environs",
+        servicesIncluded: ["Portable 12-Lead ECG/EKG", "Cardiovascular Vitals Monitoring", "Cardiac Medication Audit", "Doctor & Nurse Joint Assessment"],
+        available: true
+      },
+      {
+        teamName: "Maternal & Child Home Care Team",
+        speciality: "Pediatric & Maternal Care",
+        doctorName: "Dr. Zainab Ahmed",
+        doctorTitle: "Consultant Obstetrician & Pediatrician",
+        nurseName: "Nurse Maryam Mustapha",
+        nurseTitle: "Certified Midwife & Newborn Specialist",
+        assistantName: "Aminu Sani",
+        assistantTitle: "Pediatric Assistant",
+        fees: 55000,
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?q=80&w=600&auto=format&fit=crop",
+        about: "Comprehensive post-natal mother and newborn care visits, infant immunization guidance, growth tracking, and maternal recovery assessments.",
+        location: "Abuja & Surrounding Districts",
+        servicesIncluded: ["Newborn Vital Screening", "Post-Natal Maternal Checkup", "Infant Jaundice & Growth Check", "Lactation & Nutrition Guidance"],
+        available: true
+      }
+    ]);
+    console.log("Home Healthcare Teams seeded successfully.");
 
     console.log("Seeding Admin...");
     const admin = await Admin.create({

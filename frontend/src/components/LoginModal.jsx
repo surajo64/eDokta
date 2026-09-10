@@ -69,7 +69,7 @@ const LoginModal = ({ onClose }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative animate-fadein">
@@ -202,7 +202,7 @@ const LoginModal = ({ onClose }) => {
 
             {/* Terms & Conditions Sub-Modal */}
             {showTerms && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-60 p-4">
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4">
                     <div className="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full">
                         <h2 className="text-xl font-bold mb-4">Terms and Conditions</h2>
                         <div className="max-h-60 overflow-y-auto p-2 border border-gray-300 rounded text-sm text-gray-600">

@@ -5,7 +5,7 @@ import axios from "axios";
 import { useLoading } from '../../context/loadingContext';
 
 const AllAppointment = () => {
-  const { aToken, appointments, handleViewNote, selectedAppointment, setSelectedAppointment, allDoctorsAppointments, backendUrl } = useContext(AdminContext);
+  const { aToken, appointments, handleViewNote, selectedAppointment, setSelectedAppointment, allDoctorsAppointments, backendUrl, approveAppointment, cancelAppointment } = useContext(AdminContext);
   const { calculateAge, currencySymbol } = useContext(AppContext);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -24,7 +24,36 @@ const AllAppointment = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [doctorId, setDoctorId] = useState("all"); 
   const [doctors, setDoctors] = useState([]);
-  const { setLoading } = useLoading();
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [actionType, setActionType] = useState(null);
+
+  const handleApprove = async (id) => {
+    setActionLoadingId(id);
+    setActionType('approve');
+    try {
+      await approveAppointment(id);
+      await fetchFilteredAppointments();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoadingId(null);
+      setActionType(null);
+    }
+  };
+
+  const handleReject = async (id) => {
+    setActionLoadingId(id);
+    setActionType('reject');
+    try {
+      await cancelAppointment(id);
+      await fetchFilteredAppointments();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoadingId(null);
+      setActionType(null);
+    }
+  };
 
 
   const fetchFilteredAppointments = async () => {
@@ -40,7 +69,8 @@ const AllAppointment = () => {
       console.log("API Response:", response.data);
   
       if (response.data.success) {
-        setFilteredAppointments(response.data.appointments);
+        const sorted = response.data.appointments.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+        setFilteredAppointments(sorted);
         
         // Calculate total earnings
         const earnings = response.data.appointments
@@ -175,20 +205,81 @@ useEffect(() => {
           >
             <p>{index + 1}</p>
             <div className="flex items-center gap-2">
-              <img className="w-8 rounded-full" src={item.userData.image} alt="" />
-              <p>{item.userData.name}</p>
+              <img className="w-8 rounded-full" src={item.userData?.image || 'https://res.cloudinary.com/dyii5iyqq/image/upload/v1757340004/edoktor_fxnilb.jpg'} alt="" />
+              <div>
+                <p className="font-semibold text-gray-900">{item.userData?.name}</p>
+                {item.docData?.isHomeCareTeam && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold uppercase tracking-wider block mt-0.5">
+                    🏠 Home Visit Team
+                  </span>
+                )}
+              </div>
             </div>
-            <p>{calculateAge(item.userData.dob)}</p>
+            <p>{calculateAge(item.userData?.dob) || 'N/A'}</p>
             <p>
               {item.slotDate} <br /> {item.slotTime}
             </p>
-            <p>{item.userData.phone}</p>
+            <p>{item.userData?.phone || 'N/A'}</p>
             <div className="flex items-center gap-2">
-              <img className="w-8 rounded-full bg-gray-300" src={item.docData.image} alt="" />
-              <p>{item.docData.name}</p>
+              <img className="w-8 rounded-full bg-gray-300 object-cover" src={item.docData?.image} alt="" />
+              <div>
+                <p className="font-medium text-gray-900">{item.docData?.name}</p>
+                {item.docData?.doctorName && (
+                  <p className="text-[10px] text-gray-500">Dr: {item.docData.doctorName}</p>
+                )}
+              </div>
             </div>
             <p>{currencySymbol}{item.amount}</p>
-            <p>{item.isCompleted ? "Completed" : "Uncompleted"}</p>
+
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {item.cancelled ? (
+                <span className="text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-200">
+                  Cancelled
+                </span>
+              ) : item.isCompleted ? (
+                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                  Completed
+                </span>
+              ) : (
+                <>
+                  {!item.approve ? (
+                    <button
+                      disabled={actionLoadingId === item._id}
+                      onClick={() => handleApprove(item._id)}
+                      className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-sm transition-all flex items-center gap-1.5"
+                    >
+                      {actionLoadingId === item._id && actionType === 'approve' ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                          <span>Approving...</span>
+                        </>
+                      ) : (
+                        <span>Approve</span>
+                      )}
+                    </button>
+                  ) : (
+                    <span className="text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                      Approved
+                    </span>
+                  )}
+
+                  <button
+                    disabled={actionLoadingId === item._id}
+                    onClick={() => handleReject(item._id)}
+                    className="bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-sm transition-all flex items-center gap-1.5"
+                  >
+                    {actionLoadingId === item._id && actionType === 'reject' ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span>Rejecting...</span>
+                      </>
+                    ) : (
+                      <span>Reject</span>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>

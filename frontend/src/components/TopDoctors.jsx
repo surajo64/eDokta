@@ -1,37 +1,86 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 
 const TopDoctors = () => {
-
   const navigate = useNavigate()
   const { doctors } = useContext(AppContext)
+  const [hoveredCard, setHoveredCard] = useState(null)
 
   return (
-    <div className='flex flex-col items-center gap-4 text-gray-900 my-16 md:mx-10'>
-      <h1 className='text-3xl font-medium'>Top Doctors to Book</h1>
-      <p className='sm:w-1/3 text-sm text-center'>Simply browse through our extensive list of trusted doctors.</p>
-      <div className='w-full grid grid-cols-auto gap-4 pt-5 gap-y-6 px-3 sm:px-0'>
+    <div className="py-20">
+      {/* Section header */}
+      <div className="text-center mb-12">
+        <span className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Our Specialists</span>
+        <h2 className="text-3xl font-bold text-gray-900 mt-2">Top Doctors to Book</h2>
+        <p className="text-gray-500 text-sm mt-2 max-w-md mx-auto">
+          Simply browse through our extensive list of trusted doctors.
+        </p>
+      </div>
+
+      {/* Doctor cards grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
         {doctors.slice(0, 10).map((item, index) => (
-          <div onClick={() => {
-            if (!item.available) return;
-            navigate(`/appointment/${item._id}`);
-            scrollTo(0, 0);
-          }}key={index} className={`border border-blue-200 rounded-xl overflow-hidden transition-all duration-500 
-            ${item.available ? 'cursor-pointer hover:translate-y-[-10px]' : 'cursor-not-allowed opacity-50'}`}>
-            <img className='bg-blue-50' src={item.image} alt="" />
-            <div className='p-4'>
-              <div className='flex items-center gap-2 text-sm text-center text-green-500'>
-                <p className={`w-2 h-2 rounded-full ${item.available ? 'bg-green-500' : 'bg-red-500'}`}
-                ></p><p className={`${item.available ? 'text-green-500' : 'text-red-500'}`}>{item.available ? 'Available' : 'Unavailable'}</p>
+          <div
+            key={index}
+            onMouseEnter={() => setHoveredCard(index)}
+            onMouseLeave={() => setHoveredCard(null)}
+            className={`group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ${
+              item.available
+                ? 'cursor-pointer hover:border-blue-300 hover:shadow-xl hover:shadow-blue-100 hover:-translate-y-2'
+                : 'cursor-not-allowed opacity-60'
+            }`}
+          >
+            {/* Image */}
+            <div className="relative h-48 bg-gradient-to-br from-teal-100 via-blue-100 to-indigo-100 overflow-hidden">
+              <img
+                className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                src={item.image}
+                alt={item.name}
+              />
+              {/* Badge top-right */}
+              <div className="absolute top-3 right-3">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm bg-white ${item.available ? 'text-green-600' : 'text-red-500'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.available ? 'bg-green-500 animate-pulse' : 'bg-red-400'}`}></span>
+                  {item.available ? 'Available' : 'Unavailable'}
+                </span>
               </div>
-              <p className='text-gray-900 text-lg font-medium '>{item.name}</p>
-              <p className='text-gray-600 text-sm'>{item.speciality}</p>
+
+              {/* Hover CTA overlay */}
+              {item.available && (
+                <div className={`absolute inset-0 bg-gradient-to-t from-blue-700/70 via-transparent to-transparent flex items-end justify-center pb-3 transition-opacity duration-300 ${hoveredCard === index ? 'opacity-100' : 'opacity-0'}`}>
+                  <button
+                    onClick={() => { navigate(`/appointment/${item._id}`); scrollTo(0, 0); }}
+                    className="text-white text-xs font-semibold px-4 py-1.5 bg-white/20 rounded-full backdrop-blur-sm border border-white/30"
+                  >
+                    Book Appointment →
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="p-4">
+              <p
+                onClick={() => { if (!item.available) return; navigate(`/appointment/${item._id}`); scrollTo(0, 0); }}
+                className="text-gray-900 font-semibold text-sm leading-tight"
+              >{item.name}</p>
+              <p className="text-indigo-500 text-xs font-medium mt-0.5">{item.speciality}</p>
+              <div className={`mt-3 h-0.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ${hoveredCard === index ? 'w-full' : 'w-8'}`}></div>
             </div>
           </div>
         ))}
       </div>
-      <button onClick={() => { navigate('/doctors'); scrollTo(0, 0) }} className='bg-blue-500 text-white py-3 px-12 rounded-full mt-10 '>More...</button>
+
+      {/* View all button */}
+      <div className="flex justify-center mt-12">
+        <button
+          onClick={() => { navigate('/doctors'); scrollTo(0, 0); }}
+          className="px-10 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-blue-200 hover:scale-105 transition-all duration-200"
+        >
+          View All Doctors
+        </button>
+      </div>
     </div>
   )
 }

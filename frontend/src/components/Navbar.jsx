@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import { AppContext } from '../context/AppContext'
 import LoginModal from './LoginModal'
+import TopBar from './TopBar'
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -20,7 +21,8 @@ const Navbar = () => {
 
   return (
     <>
-      <div className='flex items-center justify-between text-sm py-4 mb-5 marging-b marging-b-3 border-b border-b-grey-400'>
+      <TopBar />
+      <div className='flex items-center justify-between text-sm py-4 mb-5 marging-b marging-b-3 border-b border-b-grey-400 px-4 sm:px-[5%]'>
         <img onClick={() => navigate('/')} src={logo} alt=" Logo" className='w-40 cursor-pointer' />
         <ul className='hidden md:flex items-start gap-5 font-medium'>
 
@@ -151,7 +153,9 @@ const Navbar = () => {
                   <div className='min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4'>
                     <p onClick={() => navigate('/my-profile')} className='hover:text-black cursor-pointer '>My Profile</p>
                     <p onClick={() => navigate('/My-Appointment')} className='hover:text-black cursor-pointer '>My Appointment</p>
+                    <p onClick={() => navigate('/my-pharmacy-orders')} className='hover:text-black cursor-pointer '>My Pharmacy Orders</p>
                     <p onClick={() => navigate('/my-courses')} className='hover:text-black cursor-pointer '>My Enrollments</p>
+                    <p onClick={() => navigate('/my-tourism-requests')} className='hover:text-black cursor-pointer '>Medical Tourism</p>
                     <p onClick={logout} className='hover:text-black cursor-pointer '>Logout</p>
                   </div>
                 </div>
@@ -250,6 +254,9 @@ const Navbar = () => {
                       </NavLink>
                       <NavLink onClick={() => setShowMenu(false)} to='/my-courses'>
                         <p className='px-4 py-2 text-base text-gray-700 hover:text-primary hover:bg-gray-50 rounded block transition'>My Enrollments</p>
+                      </NavLink>
+                      <NavLink onClick={() => setShowMenu(false)} to='/my-tourism-requests'>
+                        <p className='px-4 py-2 text-base text-gray-700 hover:text-primary hover:bg-gray-50 rounded block transition'>Medical Tourism</p>
                       </NavLink>
                       <button
                         onClick={() => { logout(); setShowMenu(false); }}

@@ -12,6 +12,7 @@ import adminModel from '../models/adminModel.js';
 import nodemailer from 'nodemailer'; 
 import specialityModel from '../models/feeModel.js';
 import mongoose from "mongoose";
+import homeCareTeamModel from '../models/homeCareTeamModel.js';
 
 
 
@@ -162,7 +163,7 @@ const adminAppointment = async (req, res) => {
 
     console.log("Query:", JSON.stringify(query, null, 2)); 
 
-    const appointments = await appointmentModel.find(query);
+    const appointments = await appointmentModel.find(query).sort({ createdAt: -1, date: -1 });
     
     console.log("Filtered Appointments:", appointments); 
 
@@ -179,24 +180,45 @@ const adminAppointment = async (req, res) => {
 
 
 
-// API to Cancel Appoint 
 const appointmentCancel = async (req, res) => {
   
   try {
-    const { appointmentId} = req.body
-    const appointmentData = await appointmentModel.findById(appointmentId)
-    await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled:true})
+    const { appointmentId } = req.body;
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentData) {
+      return res.json({ success: false, message: "Appointment not found" });
+    }
+    await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
 
-    // Relearsing slot booked
-    const {docId, slotDate, slotTime} = appointmentData
-    const doctorData = await doctorModel.findById(docId)
-    let slots_booked = doctorData.slots_booked
-    slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
-    await doctorModel.findByIdAndUpdate(docId, {slots_booked})
+    // Releasing slot booked safely
+    try {
+      const { docId, slotDate, slotTime } = appointmentData;
+      if (docId && slotDate && slotTime) {
+        let targetDoc = await doctorModel.findById(docId);
+        let targetModel = doctorModel;
 
-    res.json({success:true, message:"Appointment Cancelled!"})
+        if (!targetDoc) {
+          targetDoc = await homeCareTeamModel.findById(docId);
+          targetModel = homeCareTeamModel;
+        }
+        if (!targetDoc && appointmentData.docData?._id) {
+          targetDoc = await homeCareTeamModel.findById(appointmentData.docData._id);
+          targetModel = homeCareTeamModel;
+        }
 
+        if (targetDoc && targetDoc.slots_booked && typeof targetDoc.slots_booked === 'object') {
+          let slots_booked = targetDoc.slots_booked;
+          if (slots_booked && slots_booked[slotDate] && Array.isArray(slots_booked[slotDate])) {
+            slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+            await targetModel.findByIdAndUpdate(targetDoc._id, { slots_booked });
+          }
+        }
+      }
+    } catch (slotErr) {
+      console.log("Slot release warning:", slotErr.message);
+    }
 
+    res.json({ success: true, message: "Appointment Cancelled!" });
 
   } catch (error) {
     console.log(error);
@@ -257,11 +279,22 @@ const adminDashboard = async (req, res) => {
     let monthlyEarnings = {};
     let completedAppointments = {};
 
+    let doctorAppointments = 0;
+    let homeCareAppointments = 0;
+
     const currentMonth = new Date().getMonth();
     const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const currentYear = new Date().getFullYear();
 
     appointments.forEach((item) => {
+      // Classify appointments into Doctor (Telehealth/Facility) and Home Health Care
+      const isHomeCare = item.type === "HomeCareTeam" || item.docData?.isHomeCareTeam === true;
+      if (isHomeCare) {
+        homeCareAppointments++;
+      } else {
+        doctorAppointments++;
+      }
+
       if (item.isCompleted || item.payment) {
         totalEarning += item.amount;
 
@@ -291,7 +324,9 @@ const adminDashboard = async (req, res) => {
       doctors: doctors.length,
       users: users.length,
       appointments: appointments.length,
-      completedAppointments:completedAppointments.length,
+      doctorAppointments,
+      homeCareAppointments,
+      completedAppointments: completedAppointments.length,
       latestAppointment: appointments.slice(0, 5),
       earning: totalEarning,
       monthlyEarnings: {
@@ -680,4 +715,141 @@ const updateAdmin = async (req, res) => {
 
 
 
-export { AddDoctor, allDoctors, loginAdmin, adminAppointment, appointmentCancel,approveAppointment,getAllPatients,adminDashboard,registerAdmin,getAllAdmin,adminStatus,forgotPassword,resetPassword,getDoctorById,updateProfile,fetchDoctor,getAppointmentById,registerSpeciality,getAllSpeciality, updateSpeciality,updateAdmin } 
+const addHomeCareTeam = async (req, res) => {
+  try {
+    const { teamName, speciality, doctorId, doctorName, doctorTitle, nurseName, nurseTitle, assistantName, assistantTitle, fees, about, location, servicesIncluded } = req.body;
+    const imageFile = req.file;
+
+    if (!teamName || !speciality || !doctorName || !nurseName || !assistantName || !fees || !about) {
+      return res.status(400).json({ success: false, message: "Missing required fields for Home Care Team" });
+    }
+
+    let imageUrl = "https://res.cloudinary.com/dyii5iyqq/image/upload/v1757340004/edoktor_fxnilb.jpg";
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path);
+      imageUrl = imageUpload.secure_url;
+    }
+
+    let parsedServices = [];
+    if (servicesIncluded) {
+      try {
+        parsedServices = typeof servicesIncluded === 'string' ? JSON.parse(servicesIncluded) : servicesIncluded;
+      } catch (e) {
+        parsedServices = servicesIncluded.split(',').map(s => s.trim());
+      }
+    }
+
+    const teamData = {
+      teamName,
+      speciality,
+      doctorId: doctorId || "",
+      doctorName,
+      doctorTitle: doctorTitle || "Medical Doctor (Lead)",
+      nurseName,
+      nurseTitle: nurseTitle || "Registered Nurse",
+      assistantName,
+      assistantTitle: assistantTitle || "Clinical Assistant",
+      fees: Number(fees),
+      image: imageUrl,
+      about,
+      location: location || "Abuja Metropolitan & Environs",
+      servicesIncluded: parsedServices,
+      available: true,
+      date: Date.now()
+    };
+
+    const newTeam = new homeCareTeamModel(teamData);
+    await newTeam.save();
+
+    res.json({ success: true, message: "Home Healthcare Team registered successfully", team: newTeam });
+  } catch (error) {
+    console.error("Error adding Home Care Team:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getHomeCareTeamsAdmin = async (req, res) => {
+  try {
+    const teams = await homeCareTeamModel.find({});
+    res.json({ success: true, teams });
+  } catch (error) {
+    console.error("Error fetching Home Care Teams:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const changeTeamAvailability = async (req, res) => {
+  try {
+    const { teamId } = req.body;
+    const teamData = await homeCareTeamModel.findById(teamId);
+    if (!teamData) {
+      return res.status(404).json({ success: false, message: "Team not found" });
+    }
+    await homeCareTeamModel.findByIdAndUpdate(teamId, { available: !teamData.available });
+    res.json({ success: true, message: "Team availability updated successfully" });
+  } catch (error) {
+    console.error("Error changing team availability:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateHomeCareTeam = async (req, res) => {
+  try {
+    const { teamId, teamName, speciality, doctorId, doctorName, doctorTitle, nurseName, nurseTitle, assistantName, assistantTitle, fees, about, location, servicesIncluded, disabled_slots } = req.body;
+    const imageFile = req.file;
+
+    if (!teamId) {
+      return res.status(400).json({ success: false, message: "Team ID is required" });
+    }
+
+    let parsedServices = [];
+    if (servicesIncluded) {
+      try {
+        parsedServices = typeof servicesIncluded === 'string' ? JSON.parse(servicesIncluded) : servicesIncluded;
+      } catch (e) {
+        parsedServices = servicesIncluded.split(',').map(s => s.trim());
+      }
+    }
+
+    const updateFields = {
+      teamName,
+      speciality,
+      doctorId: doctorId || "",
+      doctorName,
+      doctorTitle: doctorTitle || "Medical Doctor (Lead)",
+      nurseName,
+      nurseTitle: nurseTitle || "Registered Nurse",
+      assistantName,
+      assistantTitle: assistantTitle || "Clinical Assistant",
+      fees: Number(fees),
+      about,
+      location: location || "Abuja Metropolitan & Environs",
+      servicesIncluded: parsedServices
+    };
+
+    if (disabled_slots !== undefined) {
+      try {
+        updateFields.disabled_slots = typeof disabled_slots === 'string' ? JSON.parse(disabled_slots) : disabled_slots;
+      } catch (e) {
+        updateFields.disabled_slots = disabled_slots;
+      }
+    }
+
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path);
+      updateFields.image = imageUpload.secure_url;
+    }
+
+    const updatedTeam = await homeCareTeamModel.findByIdAndUpdate(teamId, updateFields, { new: true });
+    if (!updatedTeam) {
+      return res.status(404).json({ success: false, message: "Home Care Team not found" });
+    }
+
+    res.json({ success: true, message: "Home Healthcare Team updated successfully", team: updatedTeam });
+  } catch (error) {
+    console.error("Error updating Home Care Team:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { AddDoctor, allDoctors, loginAdmin, adminAppointment, appointmentCancel,approveAppointment,getAllPatients,adminDashboard,registerAdmin,getAllAdmin,adminStatus,forgotPassword,resetPassword,getDoctorById,updateProfile,fetchDoctor,getAppointmentById,registerSpeciality,getAllSpeciality, updateSpeciality,updateAdmin, addHomeCareTeam, getHomeCareTeamsAdmin, changeTeamAvailability, updateHomeCareTeam }  

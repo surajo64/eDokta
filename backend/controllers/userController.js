@@ -18,6 +18,7 @@ import streamifier from "streamifier";
 import { v4 as uuidv4 } from "uuid";
 import PDFDocument from "pdfkit";
 import { buildCertificateContent, uploadCertificateToCloudinary } from "../utils/certificateHelper.js";
+import homeCareTeamModel from '../models/homeCareTeamModel.js';
 import { sendEnrollmentConfirmationEmail, sendEnrollmentNotificationEmail, sendEmail, sendVerificationEmail } from '../config/emailUtils.js';
 
 
@@ -285,7 +286,7 @@ const listAppointment = async (req, res) => {
   try {
 
     const { userId } = req.body
-    const appointments = await appointmentModel.find({ userId })
+    const appointments = await appointmentModel.find({ userId }).sort({ createdAt: -1, date: -1 })
 
     res.json({ success: true, appointments })
 
@@ -301,18 +302,40 @@ const cancelAppoint = async (req, res) => {
   try {
     const { userId, appointmentId } = req.body
     const appointmentData = await appointmentModel.findById(appointmentId)
+    if (!appointmentData) {
+      return res.json({ success: false, message: "Appointment not found" });
+    }
     await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
 
-    // Relearsing slot booked
-    const { docId, slotDate, slotTime } = appointmentData
-    const doctorData = await doctorModel.findById(docId)
-    let slots_booked = doctorData.slots_booked
-    slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+    // Releasing slot booked safely
+    try {
+      const { docId, slotDate, slotTime } = appointmentData
+      if (docId && slotDate && slotTime) {
+        let targetDoc = await doctorModel.findById(docId);
+        let targetModel = doctorModel;
+
+        if (!targetDoc) {
+          targetDoc = await homeCareTeamModel.findById(docId);
+          targetModel = homeCareTeamModel;
+        }
+        if (!targetDoc && appointmentData.docData?._id) {
+          targetDoc = await homeCareTeamModel.findById(appointmentData.docData._id);
+          targetModel = homeCareTeamModel;
+        }
+
+        if (targetDoc && targetDoc.slots_booked && typeof targetDoc.slots_booked === 'object') {
+          let slots_booked = targetDoc.slots_booked;
+          if (slots_booked && slots_booked[slotDate] && Array.isArray(slots_booked[slotDate])) {
+            slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+            await targetModel.findByIdAndUpdate(targetDoc._id, { slots_booked });
+          }
+        }
+      }
+    } catch (slotErr) {
+      console.log("Slot release warning:", slotErr.message);
+    }
 
     res.json({ success: true, message: "Appointment Cancelled!" })
-
-
 
   } catch (error) {
     console.log(error);
@@ -1029,6 +1052,100 @@ const addRating = addUserRating;
 const getStudentQuiz = fetchQuiz;
 const submitStudentQuiz = sumbitQuiz;
 
+const getHomeCareTeams = async (req, res) => {
+  try {
+    const teams = await homeCareTeamModel.find({ available: true });
+    res.json({ success: true, teams });
+  } catch (error) {
+    console.error("Error fetching public home care teams:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getHomeCareTeamById = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const team = await homeCareTeamModel.findById(teamId);
+    if (!team) {
+      return res.status(404).json({ success: false, message: "Home Care Team not found" });
+    }
+    res.json({ success: true, team });
+  } catch (error) {
+    console.error("Error fetching team by ID:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const bookHomeCareTeam = async (req, res) => {
+  try {
+    const { userId, teamId, slotDate, slotTime, address, phone, notes } = req.body;
+
+    const userData = await userModel.findById(userId).select('-password');
+    const teamData = await homeCareTeamModel.findById(teamId);
+
+    if (!userData || !teamData) {
+      return res.json({ success: false, message: "User or Home Care Team not found" });
+    }
+
+    if (!teamData.available) {
+      return res.json({ success: false, message: "Home Care Team is currently unavailable" });
+    }
+
+    let slots_booked = teamData.slots_booked || {};
+    if (slots_booked[slotDate]) {
+      if (slots_booked[slotDate].includes(slotTime)) {
+        return res.json({ success: false, message: "This slot is already booked for this Team" });
+      } else {
+        slots_booked[slotDate].push(slotTime);
+      }
+    } else {
+      slots_booked[slotDate] = [];
+      slots_booked[slotDate].push(slotTime);
+    }
+
+    delete teamData.slots_booked;
+
+    const appointmentData = {
+      userId,
+      docId: teamData.doctorId || teamId,
+      slotDate,
+      slotTime,
+      userData: {
+        ...userData._doc,
+        address: address || userData.address,
+        phone: phone || userData.phone,
+        notes: notes || ""
+      },
+      docData: {
+        _id: teamData._id,
+        doctorId: teamData.doctorId || teamId,
+        name: teamData.teamName,
+        speciality: teamData.speciality,
+        image: teamData.image,
+        doctorName: teamData.doctorName,
+        nurseName: teamData.nurseName,
+        assistantName: teamData.assistantName,
+        fees: teamData.fees,
+        address: { line1: teamData.location, line2: "Home Healthcare Visit" },
+        isHomeCareTeam: true
+      },
+      amount: teamData.fees,
+      type: "HomeCareTeam",
+      date: Date.now()
+    };
+
+    const newAppointment = new appointmentModel(appointmentData);
+    await newAppointment.save();
+
+    await homeCareTeamModel.findByIdAndUpdate(teamId, { slots_booked });
+
+    res.json({ success: true, message: "Home Healthcare Team booked successfully!", appointmentId: newAppointment._id });
+  } catch (error) {
+    console.error("Book Home Care Team error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerUser,
   userLogin,
@@ -1054,5 +1171,9 @@ export {
   getStudentQuiz,
   submitStudentQuiz,
   getCertificate,
-  verifyEmail
+  verifyEmail,
+  getHomeCareTeams,
+  getHomeCareTeamById,
+  bookHomeCareTeam
 };
+

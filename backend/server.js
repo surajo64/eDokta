@@ -7,6 +7,7 @@ import adminRouter from './routes/adminRoute.js'
 import doctorRouter from './routes/doctorRoute.js'
 import userRouter from './routes/userRouter.js'
 import educatorRouter from './routes/educatorRoutes.js'
+import pharmacyRouter from './routes/pharmacyRoute.js'
 import './cronJobs.js'; // Import the cron job file
 // app config
 
@@ -24,6 +25,7 @@ app.use('/api/admin', adminRouter)
 app.use('/api/doctor', doctorRouter)
 app.use('/api/user', userRouter)
 app.use('/api/educator', educatorRouter)
+app.use('/api/pharmacy', pharmacyRouter)
 app.get('/', (req, res) => {
   res.send('API IS WORKING PERFECT')
 })

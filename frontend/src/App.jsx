@@ -13,6 +13,10 @@ import MyProfile from './pages/MyProfile.jsx'
 import ResetPassword from './pages/resetPassword'
 import ForgotPassword from './pages/ForgotPassword '
 import TelehealthRoom from './pages/telehealthRoom.jsx'
+import Teleconsultation from './pages/Teleconsultation.jsx'
+import WellnessCheckup from './pages/WellnessCheckup.jsx'
+import MedicalTourism from './pages/MedicalTourism.jsx'
+import MyTourismRequests from './pages/MyTourismRequests.jsx'
 import Test from './pages/test'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -49,6 +53,18 @@ import AddAdmin from './pages/admin/addAdmin.jsx'
 import AdminList from './pages/admin/allAdmin.jsx'
 import EducatorList from './pages/admin/allEducators.jsx'
 import AddSpeciality from './pages/admin/addSpeciality.jsx'
+import AddHomeCareTeam from './pages/admin/AddHomeCareTeam.jsx'
+import HomeCareTeamsList from './pages/admin/HomeCareTeamsList.jsx'
+import MedicalTourismRequests from './pages/admin/MedicalTourismRequests.jsx'
+import HomeHealthcare from './pages/HomeHealthcare.jsx'
+import BookHomeTeam from './pages/BookHomeTeam.jsx'
+
+// Pharmacy Pages
+import Pharmacy from './pages/Pharmacy.jsx'
+import MyPharmacyOrders from './pages/MyPharmacyOrders.jsx'
+import AdminMedicineInventory from './pages/admin/AdminMedicineInventory.jsx'
+import AdminAddMedicine from './pages/admin/AdminAddMedicine.jsx'
+import AdminPharmacyOrders from './pages/admin/AdminPharmacyOrders.jsx'
 
 // Doctor Pages
 import DoctorLogin from './pages/doctor.jsx'
@@ -104,6 +120,8 @@ const App = () => {
     location.pathname.startsWith('/add-admin') ||
     location.pathname.startsWith('/admin-list') ||
     location.pathname.startsWith('/fee-speciality') ||
+    location.pathname.startsWith('/add-home-care-team') ||
+    location.pathname.startsWith('/home-care-teams-list') ||
     location.pathname.startsWith('/change-password') ||
     location.pathname.startsWith('/telehealthRoom') ||
     location.pathname.startsWith('/educator') ||
@@ -120,7 +138,12 @@ const App = () => {
     location.pathname.startsWith('/educator-admin-dashboard') ||
     location.pathname.startsWith('/educator-profile') ||
     location.pathname.startsWith('/educator-settings') ||
-    location.pathname.startsWith('/educator-list');
+    location.pathname.startsWith('/educator-list') ||
+    location.pathname.startsWith('/medical-tourism-requests') ||
+    location.pathname.startsWith('/admin-pharmacy-inventory') ||
+    location.pathname.startsWith('/admin-add-medicine') ||
+    location.pathname.startsWith('/admin-edit-medicine') ||
+    location.pathname.startsWith('/admin-pharmacy-orders');
 
   if (isManagementRoute) {
     return (
@@ -143,6 +166,13 @@ const App = () => {
                   <Route path='/admin-list' element={<AdminList />} />
                   <Route path='/educator-list' element={<EducatorList />} />
                   <Route path='/fee-speciality' element={<AddSpeciality />} />
+                  <Route path='/add-home-care-team' element={<AddHomeCareTeam />} />
+                  <Route path='/home-care-teams-list' element={<HomeCareTeamsList />} />
+                  <Route path='/medical-tourism-requests' element={<MedicalTourismRequests />} />
+                  <Route path='/admin-pharmacy-inventory' element={<AdminMedicineInventory />} />
+                  <Route path='/admin-add-medicine' element={<AdminAddMedicine />} />
+                  <Route path='/admin-edit-medicine/:id' element={<AdminAddMedicine />} />
+                  <Route path='/admin-pharmacy-orders' element={<AdminPharmacyOrders />} />
 
                   {/* Doctor Routes */}
                   <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
@@ -190,35 +220,47 @@ const App = () => {
   }
 
   return (
-    <div className='mx-4 sm:mx-[5%]'>
-      <ToastContainer />
-      <Navbar />
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/about' element={<About />} />
-        <Route path='/ruralhealth' element={<RuralHealth />} />
-        <Route path='/insurance' element={<Insurance />} />
-        <Route path='/contact' element={<Contact />} />
-        <Route path='/doctors' element={<Doctors />} />
-        <Route path='/doctors/:speciality' element={<Doctors />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/my-profile' element={<MyProfile />} />
-        <Route path='/my-appointment' element={<MyAppointment />} />
-        <Route path='/appointment/:docId' element={<Appointment />} />
-        <Route path='/reset-password/:token' element={<ResetPassword />} />
-        <Route path='/forgot-password' element={<ForgotPassword />} />
-        <Route path='/telehealth/:appointmentId' element={<TelehealthRoom />} />
-        <Route path='/education-training' element={<AllCourses />} />
-        <Route path='/registercourse' element={<RegisterCourse />} />
-        <Route path='/course/:id' element={<CourseDetails />} />
-        <Route path='/player/:courseId' element={<Player />} />
-        <Route path='/quiz/:id' element={<Quiz />} />
-        <Route path='/my-courses' element={<StudentMyCourses />} />
-        <Route path='/payment-callback' element={<PaymentCallback />} />
-        <Route path='/test' element={<Test />} />
-      </Routes>
+    <>
+      <div>
+        <ToastContainer />
+        <Navbar />
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/about' element={<About />} />
+          <Route path='/digital-clinic/teleconsultation' element={<Teleconsultation />} />
+          <Route path='/digital-clinic/home-healthcare' element={<HomeHealthcare />} />
+          <Route path='/digital-clinic/wellness-checkup' element={<WellnessCheckup />} />
+          <Route path='/digital-clinic/medical-tourism' element={<MedicalTourism />} />
+          <Route path='/digital-clinic/e-pharmacy' element={<Pharmacy />} />
+          <Route path='/pharmacy' element={<Pharmacy />} />
+          <Route path='/my-pharmacy-orders' element={<MyPharmacyOrders />} />
+          <Route path='/my-tourism-requests' element={<MyTourismRequests />} />
+          <Route path='/digital-clinic/:service' element={<Teleconsultation />} />
+          <Route path='/book-home-team/:teamId' element={<BookHomeTeam />} />
+          <Route path='/ruralhealth' element={<RuralHealth />} />
+          <Route path='/insurance' element={<Insurance />} />
+          <Route path='/contact' element={<Contact />} />
+          <Route path='/doctors' element={<Doctors />} />
+          <Route path='/doctors/:speciality' element={<Doctors />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/my-profile' element={<MyProfile />} />
+          <Route path='/my-appointment' element={<MyAppointment />} />
+          <Route path='/appointment/:docId' element={<Appointment />} />
+          <Route path='/reset-password/:token' element={<ResetPassword />} />
+          <Route path='/forgot-password' element={<ForgotPassword />} />
+          <Route path='/telehealth/:appointmentId' element={<TelehealthRoom />} />
+          <Route path='/education-training' element={<AllCourses />} />
+          <Route path='/registercourse' element={<RegisterCourse />} />
+          <Route path='/course/:id' element={<CourseDetails />} />
+          <Route path='/player/:courseId' element={<Player />} />
+          <Route path='/quiz/:id' element={<Quiz />} />
+          <Route path='/my-courses' element={<StudentMyCourses />} />
+          <Route path='/payment-callback' element={<PaymentCallback />} />
+          <Route path='/test' element={<Test />} />
+        </Routes>
+      </div>
       <Footer />
-    </div>
+    </>
   )
 }
 

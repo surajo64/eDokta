@@ -22,7 +22,8 @@ const navigate = useNavigate()
       console.log(data.appointments);
 
       if (data.success) {
-        setAppointment(data.appointments.reverse())
+        const sorted = data.appointments.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+        setAppointment(sorted);
         console.log(data.appointments)
       }
     } catch (error) {
@@ -150,8 +151,22 @@ const navigate = useNavigate()
             <div className='flex-1 text-sm text-zinc-600'>
               <p className='text-neutral-800 font-semibold'>{item.docData.name}</p>
               <p className='font-medium mt-1 text-primary'>{item.docData.speciality}</p>
-              <p className='text-zinc-700 font-medium mt-1'>Address:</p>
-              <p className='text-sm mt-1'>{item.docData.address}</p>
+              
+              {item.docData.isHomeCareTeam && (
+                <div className='my-1 text-xs text-gray-700 bg-blue-50/80 p-2 rounded-lg border border-blue-100 space-y-0.5'>
+                  <p className='font-semibold text-primary text-[10px] uppercase'>Visiting Team Members:</p>
+                  <p>🩺 <strong>Doctor:</strong> {item.docData.doctorName}</p>
+                  <p>👩‍⚕️ <strong>Nurse:</strong> {item.docData.nurseName}</p>
+                  <p>🧑‍⚕️ <strong>Assistant:</strong> {item.docData.assistantName}</p>
+                </div>
+              )}
+
+              <p className='text-zinc-700 font-medium mt-1'>Address / Location:</p>
+              <p className='text-sm mt-1'>
+                {typeof item.docData.address === 'object' && item.docData.address !== null
+                  ? `${item.docData.address.line1 || ''} ${item.docData.address.line2 || ''}`
+                  : item.docData.address || 'Location specified at booking'}
+              </p>
               <p className='font-medium mt-1 text-green-700'><span className='text-primary font-semibold font-medium'>BOOKED: </span> {item.slotDate} | {item.slotTime}</p>
             </div>
 

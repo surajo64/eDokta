@@ -66,7 +66,12 @@ const doctorAppointment = async (req,res) => {
 
    try {
       const { docId } = req.body
-      const appointments = await appointmentModel.find({docId})
+      const appointments = await appointmentModel.find({
+        $or: [
+          { docId: docId },
+          { "docData.doctorId": docId }
+        ]
+      }).sort({ createdAt: -1, date: -1 })
       res.json({success:true, appointments})
 
    } catch (error) {
@@ -100,21 +105,43 @@ const approveAppointment = async (req, res) => {
 const appointmentCancel = async (req, res) => {
   
    try {
-     const { appointmentId} = req.body
+     const { appointmentId } = req.body
      const appointmentData = await appointmentModel.findById(appointmentId)
-     await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled:true})
+     if (!appointmentData) {
+       return res.json({ success: false, message: "Appointment not found" });
+     }
+     await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
  
-     // Relearsing slot booked
-     const {docId, slotDate, slotTime} = appointmentData
-     const doctorData = await doctorModel.findById(docId)
-     let slots_booked = doctorData.slots_booked
-     slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
-     await doctorModel.findByIdAndUpdate(docId, {slots_booked})
- 
-     res.json({success:true, message:"Appointment Cancelled!"})
- 
- 
- 
+     // Releasing slot booked safely
+     try {
+       const { docId, slotDate, slotTime } = appointmentData
+       if (docId && slotDate && slotTime) {
+         let targetDoc = await doctorModel.findById(docId);
+         let targetModel = doctorModel;
+
+         if (!targetDoc) {
+           targetDoc = await homeCareTeamModel.findById(docId);
+           targetModel = homeCareTeamModel;
+         }
+         if (!targetDoc && appointmentData.docData?._id) {
+           targetDoc = await homeCareTeamModel.findById(appointmentData.docData._id);
+           targetModel = homeCareTeamModel;
+         }
+
+         if (targetDoc && targetDoc.slots_booked && typeof targetDoc.slots_booked === 'object') {
+           let slots_booked = targetDoc.slots_booked;
+           if (slots_booked && slots_booked[slotDate] && Array.isArray(slots_booked[slotDate])) {
+             slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+             await targetModel.findByIdAndUpdate(targetDoc._id, { slots_booked });
+           }
+         }
+       }
+     } catch (slotErr) {
+       console.log("Slot release warning:", slotErr.message);
+     }
+
+     res.json({ success: true, message: "Appointment Cancelled!" })
+
    } catch (error) {
      console.log(error);
      res.json({ success: false, message: error.message });
@@ -218,15 +245,28 @@ const doctorProfile = async (req,res) => {
 const updateProfile = async (req, res) => {
   try {
 
-    const { docId, name, address, state,speciality,email,experience,degree, about,available } = req.body;
-    const imageFile = req.file
+    const { docId, name, address, state, speciality, email, experience, degree, about, available, disabled_slots } = req.body;
+    const imageFile = req.file;
 
-    if (!name || !email || !address || !state || !degree || !speciality || !experience || !about || !available) {
-      res.json({ success: false, message: 'Data is Missing' })
+    if (!name || !email || !address || !state || !degree || !speciality || !experience || !about) {
+      return res.json({ success: false, message: 'Data is Missing' });
     }
 
-    await doctorModel.findByIdAndUpdate(docId,
-      { name, address, state,speciality,email,experience,about,available,degree });
+    let parsedDisabledSlots;
+    if (disabled_slots !== undefined) {
+      try {
+        parsedDisabledSlots = typeof disabled_slots === 'string' ? JSON.parse(disabled_slots) : disabled_slots;
+      } catch (e) {
+        parsedDisabledSlots = disabled_slots;
+      }
+    }
+
+    const updateFields = { name, address, state, speciality, email, experience, about, available, degree };
+    if (parsedDisabledSlots !== undefined) {
+      updateFields.disabled_slots = parsedDisabledSlots;
+    }
+
+    await doctorModel.findByIdAndUpdate(docId, updateFields);
 
     if (imageFile) {
       //upload image to cloudinary
@@ -235,7 +275,7 @@ const updateProfile = async (req, res) => {
       await doctorModel.findByIdAndUpdate(docId, { image: imageUrl })
     }
 
-    res.json({ success: true, message: "Profile Updated Successfully", });
+    res.json({ success: true, message: "Profile Updated Successfully" });
 
   } catch (error) {
     console.log(error);

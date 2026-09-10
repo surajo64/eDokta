@@ -1,5 +1,6 @@
 import express from 'express';
-import { AddDoctor, adminAppointment, adminDashboard, allDoctors, appointmentCancel, approveAppointment, adminStatus, fetchDoctor, forgotPassword, getAllAdmin, getAllPatients, getAllSpeciality, getAppointmentById, getDoctorById, loginAdmin, registerAdmin, registerSpeciality, resetPassword, updateAdmin, updateProfile, updateSpeciality } from '../controllers/adminController.js';
+import { AddDoctor, adminAppointment, adminDashboard, allDoctors, appointmentCancel, approveAppointment, adminStatus, fetchDoctor, forgotPassword, getAllAdmin, getAllPatients, getAllSpeciality, getAppointmentById, getDoctorById, loginAdmin, registerAdmin, registerSpeciality, resetPassword, updateAdmin, updateProfile, updateSpeciality, addHomeCareTeam, getHomeCareTeamsAdmin, changeTeamAvailability, updateHomeCareTeam } from '../controllers/adminController.js';
+import { getAllTourismRequests, getTourismRequestById, updateTourismRequest, deleteTourismRequest } from '../controllers/medicalTourismController.js';
 import upload from '../middlewares/multer.js';
 import authAdmin from '../middlewares/authAdmin.js';
 import { changeAvailability } from '../controllers/doctorController.js';
@@ -31,6 +32,17 @@ adminRouter.post('/update-speciality',authAdmin,updateSpeciality);
 adminRouter.get('/doctors', authAdmin, allDoctors );
 adminRouter.post('/update-admin',authAdmin,updateAdmin);
 
+// Home Care Team Admin Routes
+adminRouter.post('/add-home-care-team', authAdmin, upload.single('image'), addHomeCareTeam);
+adminRouter.post('/update-home-care-team', authAdmin, upload.single('image'), updateHomeCareTeam);
+adminRouter.get('/home-care-teams', authAdmin, getHomeCareTeamsAdmin);
+adminRouter.post('/change-team-availability', authAdmin, changeTeamAvailability);
 
+// Medical Tourism Admin Routes
+adminRouter.get('/tourism-requests', authAdmin, getAllTourismRequests);
+adminRouter.get('/tourism-request/:id', authAdmin, getTourismRequestById);
+adminRouter.post('/update-tourism-request', authAdmin, updateTourismRequest);
+adminRouter.post('/delete-tourism-request', authAdmin, deleteTourismRequest);
 
 export default adminRouter;
+

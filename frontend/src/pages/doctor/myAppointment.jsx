@@ -273,63 +273,90 @@ const navigate = useNavigate()
           <div key={index} className="flex flex-col sm:grid sm:grid-cols-[0.5fr_3fr_1fr_2fr_2fr_3fr_2fr_3fr] items-center text-gray-500 py-3 px-4 sm:px-6 border-b hover:bg-blue-50">
             <p className="hidden sm:block">{startIndex + index + 1}</p>
             <div className="flex items-center gap-2">
-              <img className="w-8 h-8 rounded-full" src={item.userData.image} alt="" />
-              <p>{item.userData.name}</p>
+              <img className="w-8 h-8 rounded-full" src={item.userData.image || 'https://res.cloudinary.com/dyii5iyqq/image/upload/v1757340004/edoktor_fxnilb.jpg'} alt="" />
+              <div>
+                <p className="font-semibold text-gray-900">{item.userData.name}</p>
+                {item.docData.isHomeCareTeam && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold uppercase tracking-wider block mt-0.5">
+                    🏠 Home Visit Team
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="max-sm:hidden">{calculateAge(item.userData.dob)}</p>
+            <p className="max-sm:hidden">{calculateAge(item.userData.dob) || 'N/A'}</p>
             <p>{item.slotDate} <br /> {item.slotTime}</p>
-            <p>{item.userData.phone}</p>
+            <p>{item.userData.phone || 'N/A'}</p>
             <div className="flex items-center gap-2">
-              <img className="w-8 h-8 rounded-full bg-gray-300" src={item.docData.image} alt="" />
-              <p className="text-center sm:text-left">{item.docData.name}</p>
+              <img className="w-8 h-8 rounded-full bg-gray-300 object-cover" src={item.docData.image} alt="" />
+              <div>
+                <p className="text-center sm:text-left font-medium">{item.docData.name}</p>
+                {item.docData.isHomeCareTeam && (
+                  <p className="text-[10px] text-gray-500">
+                    Dr: {item.docData.doctorName}
+                  </p>
+                )}
+              </div>
             </div>
-            <p className="text-center sm:text-left">{currencySymbol}{item.docData.doctorFee}</p>
+            <p className="text-center sm:text-left">{currencySymbol}{item.docData.doctorFee || item.docData.fees || item.amount}</p>
 
-            <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-              {item.payment && !item.isCompleted && (
-                item.type === "telemedicine" ? (
+            <div className="flex flex-wrap gap-2 justify-center sm:justify-start items-center">
+              {item.cancelled ? (
+                <span className="sm:min-w-32 py-1.5 px-3 text-center border border-red-500 rounded-full text-red-600 text-xs font-medium">
+                  Cancelled
+                </span>
+              ) : item.isCompleted ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white px-3 py-1.5 rounded-full bg-blue-500 font-medium">Completed</span>
+                  <button onClick={() => handleViewNote(item._id)} className="text-xs text-white px-3 py-1.5 rounded-full bg-green-500 hover:bg-green-600 font-medium">View Note</button>
+                </div>
+              ) : (
+                <>
+                  {/* Approval State & Button */}
+                  {!item.approve ? (
+                    <button onClick={() => handleApproveAppointment(item._id)} className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm">
+                      Approve
+                    </button>
+                  ) : (
+                    <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
+                      Approved
+                    </span>
+                  )}
 
-                   <button
-                    onClick={() => navigate(`/telehealthRoom/${item._id}`)}
-                    className="text-sm text-white bg-blue-500 px-4 py-2 rounded hover:bg-blue-600 transition"
-                  >
-                    Start Meeting
+                  {/* Payment & Action conditional on approval */}
+                  {item.approve && (
+                    item.payment ? (
+                      <>
+                        <span className="text-white text-xs px-3 py-1 rounded-full bg-green-600 font-semibold">
+                          Paid
+                        </span>
+                        {item.type === "telemedicine" ? (
+                          <button
+                            onClick={() => navigate(`/telehealthRoom/${item._id}`)}
+                            className="text-xs text-white bg-blue-500 px-3.5 py-1.5 rounded-full hover:bg-blue-600 font-semibold transition"
+                          >
+                            Start Meeting
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleCompleteClick(item)}
+                            className="bg-primary hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm"
+                          >
+                            Complete Visit & Note
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
+                        Awaiting Payment
+                      </span>
+                    )
+                  )}
+
+                  {/* Reject / Cancel Action */}
+                  <button className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full" onClick={() => handleCancelAppoitment(item._id)}>
+                    Reject / Cancel
                   </button>
- 
-                ) : (
-                  <button
-                    disabled
-                    className="text-white text-sm px-3 py-1 rounded-full bg-green-500 cursor-not-allowed"
-                  >
-                    Paid!
-                  </button>
-                )
-              )}
-
-
-              {item.payment && !item.isCompleted && (
-                <button onClick={() => handleCompleteClick(item)} className="bg-primary text-white text-sm px-3 py-1 rounded-full ">Clinical Note</button>
-              )}
-              {!item.payment && !item.cancelled && !item.approve && (
-                <button onClick={() => handleApproveAppointment(item._id)} className="bg-green-500 text-white text-sm px-3 py-1 rounded-full">Approve</button>
-              )}
-              {!item.payment && !item.cancelled && !item.approve && (
-                <button className="bg-red-500 text-white text-sm px-3 py-1 rounded-full" onClick={() => handleCancelAppoitment(item._id)}>Cancel</button>
-              )}
-              {item.cancelled && (
-                <button className='sm:min-w-48 py-2 border border-red-600 rounded text-red-600 cursor-not-allowed'>Appointment Cancelled!</button>
-              )}
-
-              {item.approve && item.payment && item.isCompleted && !item.cancelled && (
-                <button
-                  className="text-sm text-white px-3 py-1 border rounded bg-blue-500 cursor-pointerer">Completed</button>)}
-              {item.approve && item.payment && item.isCompleted && !item.cancelled && (
-                <button
-                  onClick={() => handleViewNote(item._id)}
-                  className="text-sm text-white px-3 py-1 border rounded bg-green-500 cursor-pointerer">View Note!</button>)}
-
-              {item.approve && !item.payment && (
-                <button className="text-sm cursor-not-allowed text-white px-3 py-1 border rounded bg-blue-400">Approved!</button>
+                </>
               )}
             </div>
           </div>

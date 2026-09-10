@@ -20,6 +20,7 @@ const doctorSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   date: { type: Date, required: true },
   slots_booked: { type: Object, default: {} },
+  disabled_slots: { type: Object, default: {} },
 }, { minimize: false })
 
 const doctorModel = mongoose.models.doctor || mongoose.model('doctor', doctorSchema)
